@@ -177,9 +177,9 @@ transforms.Resize([224,224]),
 transforms.ToTensor(),
 ])
 
-model = timm.create_model(model_name, pretrained=True, num_classes = num_classes)
+model = timm.create_model(model_name, pretrained=pretrained, num_classes = num_classes)
 model = model.to(device)
-criterion = nn.CrossEntropyLoss()
+loss_func = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr = lr)
 scheduler = ReduceLROnPlateau(optimizer, patience = 4, factor = 0.1, threshold = 0.001)
 train_dataset = CreateImageDataset(train_label_set, train_imagepath, transform=transformation)
@@ -190,7 +190,7 @@ valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True
 params_train = {
 'num_epochs':epochs,
 'optimizer':optimizer,
-'criterion':criterion,
+'loss_func':loss_func,
 'train_dl':train_dataloader,
 'val_dl':valid_dataloader,
 'sanity_check':False,
