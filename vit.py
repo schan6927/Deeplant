@@ -31,15 +31,6 @@ from torchvision.transforms import Compose, Resize, ToTensor
 from einops import rearrange, reduce, repeat
 from einops.layers.torch import Rearrange, Reduce
 
-
-
-
-
-
-
-# In[10]:
-
-
 trainpath = '../Training/'
 valpath = '../Validation/'
 train_imagepath = os.path.join(trainpath, 'images')
@@ -48,17 +39,10 @@ val_imagepath = os.path.join(valpath,'images')
 train_labelpath = os.path.join(trainpath, 'labels')
 val_labelpath = os.path.join(valpath, 'labels')
 
-
-# In[ ]:
-
-
 train_label_set = pd.read_csv("train.csv")
 val_label_set = pd.read_csv("valid.csv")
 print(train_label_set)
 print(val_label_set)
-
-# In[ ]:
-
 
 def grade_encoding(x):
     if x == '1++':
@@ -75,16 +59,6 @@ def grade_encoding(x):
 
 train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
 val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
-
-# In[ ]:
-
-
-#Define hyperparameters
-batch_size = 32
-lr = 0.01
-epochs = 100
-
-# In[ ]:
 
 
 class CreateImageDataset(Dataset):
@@ -112,21 +86,16 @@ transformation = transforms.Compose([
     transforms.ToTensor(),
     ])
 
-
-# In[ ]:
-
+#Define hyperparameters
+batch_size = 32
+lr = 0.01
+epochs = 100
 
 train_dataset = CreateImageDataset(train_label_set, train_imagepath, transform=transformation)
 valid_dataset = CreateImageDataset(val_label_set, val_imagepath, transform=transformation)
 
-# In[ ]:
-
-
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=12)
 valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=12)
-
-# In[ ]:
-
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
@@ -209,10 +178,3 @@ plt.plot(val_loss, label = 'val_loss')
 plt.legend()
 plt.title('Accuracy and Loss Plots')
 plt.show()
-
-
-
-# In[ ]:
-
-
-
