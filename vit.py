@@ -164,7 +164,7 @@ train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True
 valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 params_train = {
-'num_epochs':20,
+'num_epochs':epochs,
 'optimizer':optimizer,
 'criterion':criterion,
 'train_dl':train_dataloader,
@@ -174,10 +174,16 @@ params_train = {
 'path2weights':'./models/weights.pt',
 }
 
+params_model = {
+    'batch size':batch_size,
+    'lr':lr,
+    'model name':model_name,
+    'pretrained':pretrained,
+}
+
 with mlflow.start_run() as run:
-    mlflow.log_param("lr", lr)
-    mlflow.log_param("epoch", epochs)
-    mlflow.log_param("batch size", batch_size)
+    mlflow.log_params(params_train)
+    mlflow.log_params(params_model)
     model, train_acc, val_acc, train_loss, val_loss = training(model, params_train)
 
     #plot the curves
