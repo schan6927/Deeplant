@@ -5,31 +5,21 @@ import torch
 import numpy as np
 import pandas as pd
 
-from tqdm import tqdm, trange
-from torch.optim import Adam
-from torch.nn import CrossEntropyLoss
+from tqdm import tqdm
 from torch.utils.data import DataLoader, Dataset
-from torchvision.transforms import ToTensor
-from torchvision.datasets.mnist import MNIST
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from torch import optim
-from torchvision.io import read_image
-
 import matplotlib.pyplot as plt
-import torch.nn.functional as F
 
 import timm
 import mlflow
 import os
 
 from torch import nn
-from torch import Tensor
 from PIL import Image
 from torchvision.transforms import Compose, Resize, ToTensor
-from einops import rearrange, reduce, repeat
-from einops.layers.torch import Rearrange, Reduce
 
 trainpath = '../Training/'
 valpath = '../Validation/'
