@@ -1,2 +1,4 @@
 *.csv
 mlruns
+__pycache__
+data
