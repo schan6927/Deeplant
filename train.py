@@ -62,8 +62,8 @@ def training(model, params):
         #training
         model.train()
         loss, metric = loss_epoch(model, loss_func, train_dl, False, optimizer)
-        mlflow.log_metric("train loss", loss)
-        mlflow.log_metric("train accuracy", metric)
+        mlflow.log_metric("train loss", loss, epoch)
+        mlflow.log_metric("train accuracy", metric, epoch)
         train_loss.append(loss)
         train_metric.append(metric)
 
@@ -71,19 +71,20 @@ def training(model, params):
         model.eval()
         with torch.no_grad():
             loss, metric = loss_epoch(model, loss_func, val_dl, False)
-        mlflow.log_metric("val loss", loss)
-        mlflow.log_metric("val accuracy", metric)
+        mlflow.log_metric("val loss", loss, epoch)
+        mlflow.log_metric("val accuracy", metric, epoch)
         val_loss.append(loss)
         val_metric.append(metric)
         scheduler.step(val_loss[-1])
 
-        if epoch % log_epoch:
-            mlflow.pytorch.load_model(model, f'model_epoch_{epoch+1}')
+        if epoch % log_epoch == log_epoch-1:
+            mlflow.pytorch.log_model(model, f'model_epoch_{epoch}')
             
         #saving best model
         if val_metric[-1]>best_acc:
             best_acc = val_metric[-1]
-            mlflow.pytorch.log_model(model, "best")
+            mlflow.set_tag("description", f'best at epoch {epoch}')
+            mlflow.pytorch.log_model(model, f"best")
         print('The Validation Loss is {} and the validation accuracy is {}'.format(val_loss[-1],val_metric[-1]))
         print('The Training Loss is {} and the training accuracy is {}'.format(train_loss[-1],train_metric[-1]))
 
