@@ -80,6 +80,9 @@ batch_size = 16
 lr = 0.0001
 epochs = 10
 
+#Define kfold
+fold = 5
+
 log_epoch = 5
 num_workers = 4
 num_classes = 5
@@ -96,7 +99,9 @@ else:
 
 #Define input transform
 transformation = transforms.Compose([
-transforms.Resize([imageSize,imageSize]),
+transforms.RandomHorizontalFlip(p=0.3),
+transforms.RandomVerticalFlip(p=0.3),
+transforms.RandomRotation((-20,20)),
 transforms.ToTensor(),
 ])
 
@@ -106,18 +111,20 @@ optimizer = optim.Adam(model.parameters(), lr = lr)
 scheduler = ReduceLROnPlateau(optimizer, patience = 4, factor = 0.1, threshold = 0.001)
 train_dataset = CreateImageDataset(train_label_set, trainpath, transform=transformation)
 valid_dataset = CreateImageDataset(val_label_set, valpath, transform=transformation)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+#train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+#valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 params_train = {
 'num_epochs':epochs,
 'optimizer':optimizer,
 'loss_func':loss_func,
-'train_dl':train_dataloader,
-'val_dl':valid_dataloader,
 'sanity_check':False,
 'lr_scheduler':scheduler,
 'log_epoch':log_epoch,
+'fold':fold,
+'train_dataset':train_dataset,
+'valid_dataset':valid_dataset,
+'batch_size':batch_size,
 }
 
 experiment_name = "ViT"
