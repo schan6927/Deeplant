@@ -27,7 +27,7 @@ def loss_batch(loss_func, output, target, opt=None):
 def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None):
     running_loss = 0.0
     running_metrics = 0.0
-    len_data = len(dataset_dl.dataset)
+    len_data = len(dataset_dl.sampler)
 
     for xb, yb in tqdm(dataset_dl):
         xb = xb.to(device)

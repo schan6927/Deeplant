@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import timm
 import mlflow
 import os
+import gc
 
 from torch import nn
 from PIL import Image
@@ -93,12 +94,10 @@ train_dataset = CreateImageDataset(train_label_set, trainpath, transform=transfo
 valid_dataset = CreateImageDataset(val_label_set, valpath, transform=transformation)
 dataset = torch.utils.data.ConcatDataset([train_dataset, valid_dataset])
 splits = KFold(n_splits = fold, shuffle = True, random_state =42)
-#train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-#valid_dataloader = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 #Define hyperparameters
 batch_size = 16
-lr = 0.0001
+lr = 1e-5
 epochs = 10
 
 log_epoch = 5
@@ -146,6 +145,8 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     test_sampler = SubsetRandomSampler(val_idx)
     train_dl = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
     val_dl = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler)
+# train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+# val_dl = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
     params_vit['optimizer']=optimizer
     params_vit['lr_scheduler']=scheduler
@@ -154,3 +155,9 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     params_vit['val_dl']=val_dl
     params_vit['fold']=fold
     vit.run(model, params_vit)
+    model.cpu()
+    del model
+    gc.collect()
+    
+    
+torch.cuda.empty_cache()
