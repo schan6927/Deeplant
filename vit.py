@@ -86,7 +86,7 @@ num_classes = 5
 pretrained = True
 model_name = 'vit_base_patch32_clip_448.laion2b_ft_in12k_in1k'
 
-load_run = True
+load_run = False
 logged_model = 'runs:/523f68657d884879844be1c409bd96c0/best'
 
 if load_run == True:
