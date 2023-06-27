@@ -145,10 +145,10 @@ num_workers = args.num_workers
 num_classes = args.num_classes
 
 sanity = args.sanity
-pretrained = True
+pretrained = args.pretrained
 model_name = args.model_name
 
-load_run = False
+load_run = args.load_run
 logged_model = args.logged_model #'runs:/523f68657d884879844be1c409bd96c0/best'
 
 experiment_name = args.model_type
@@ -185,7 +185,7 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     model = model.to(device)
     loss_func = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr = lr)
-    scheduler = ReduceLROnPlateau(optimizer, patience = 4, factor = 0.1, threshold = 0.001)
+    scheduler = ReduceLROnPlateau(optimizer, patience = 4, factor = args.factor, threshold = args.threshold)
 
     train_sampler = SubsetRandomSampler(train_idx) 
     test_sampler = SubsetRandomSampler(val_idx)
