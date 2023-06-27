@@ -20,7 +20,7 @@ def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch
         yb = yb.to(device)
         output = model(xb)
         loss_b = loss_func(output, yb)
-        pred_b = torch.max(output.data, 1)
+        scores, pred_b = torch.max(output.data, 1)
         metric_b = (pred_b == yb).sum().item()
     
         running_loss += loss_b.item()
