@@ -17,8 +17,8 @@
 * --log_epoch, default=5, type=int                          # 몇 epoch당 모델을 기록할 지 정함
 * --num_classes, default=5, type=int                        # output class 개수
 
-* --factor, default=0.1, type=float                         # scheduler factor
-* --threshold, default=0.001, type=float                    # scheduler threshold
+* --factor, default=0.5, type=float                         # scheduler factor
+* --threshold, default=0.003, type=float                    # scheduler threshold
 * --momentum', default=0.9, type=float                      # optimizer의 momentum
 * --weight_decay, --wd, default=5e-4, type=float            # 가중치 정규화
 
@@ -28,6 +28,7 @@
 
 > 추가 예정
 >> * optimizer
+>> * patience
 
 # pip install
 pip install timm && pip install einops && pip install --upgrade huggingface_hub
