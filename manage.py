@@ -88,8 +88,8 @@ parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # lear
 parser.add_argument('--log_epoch', default=5, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
-parser.add_argument('--factor', default=0.1, type=float)  # scheduler factor
-parser.add_argument('--threshold', default=0.001, type=float)  # scheduler threshold
+parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
+parser.add_argument('--threshold', default=0.003, type=float)  # scheduler threshold
 parser.add_argument('--momentum', default=0.9, type=float)  # optimizer의 momentum
 parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float)  # 가중치 정규화
 
@@ -185,7 +185,7 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     model = model.to(device)
     loss_func = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr = lr)
-    scheduler = ReduceLROnPlateau(optimizer, patience = 4, factor = args.factor, threshold = args.threshold)
+    scheduler = ReduceLROnPlateau(optimizer, patience = 2, factor = args.factor, threshold = args.threshold)
 
     train_sampler = SubsetRandomSampler(train_idx) 
     test_sampler = SubsetRandomSampler(val_idx)

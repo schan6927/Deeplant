@@ -20,9 +20,11 @@ def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch
         yb = yb.to(device)
         output = model(xb)
         loss_b = loss_func(output, yb)
-        pred_b = output.argmax(1, keepdim=True)
+        pred_b = torch.max(output.data, 1)
         metric_b = (pred_b == yb).sum().item()
-        
+    
+        running_loss += loss_b.item()
+
         if opt is not None:
             opt.zero_grad()
             loss_b.backward()
@@ -31,8 +33,6 @@ def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch
             labels_conv = yb.cpu().numpy()
             conf_pred.append(predictions_conv)
             conf_label.append(labels_conv)
-
-        running_loss += loss_b
 
         if metric_b is not None:
             running_metrics += metric_b
