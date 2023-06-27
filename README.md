@@ -4,7 +4,8 @@
 * --data_path, default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
 
 * --model_type, type=str, choices('cnn','vit')              # 사용할 모델 선택
-* --model_name, type=str                                    # 사용할 모델 선택
+* --model_name, type=str                                    # 사용할 세부 모델 선택
+* --run_name, type=str, default=model_tpye                  # run 이름 결정
 * --sanity, default=False, type=bool                        # 빠른 test 여부
 
 * --image_size, default=224, type=int, choices=(224,448)    # 이미지 크기 재설정

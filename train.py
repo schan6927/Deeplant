@@ -7,7 +7,7 @@ import sklearn
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 # calculate the loss per epochs
-def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch=None, fold=None):
+def loss_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check=False, opt=None):
     running_loss = 0.0
     running_metrics = 0.0
     len_data = len(dataset_dl.sampler)
@@ -20,11 +20,10 @@ def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch
         yb = yb.to(device)
         output = model(xb)
         loss_b = loss_func(output, yb)
-        scores, pred_b = torch.max(output.data, 1)
+        scores, pred_b = torch.max(output.data,1)
         metric_b = (pred_b == yb).sum().item()
-    
         running_loss += loss_b.item()
-
+        
         if opt is not None:
             opt.zero_grad()
             loss_b.backward()
@@ -33,6 +32,7 @@ def loss_epoch(model, loss_func, dataset_dl, sanity_check=False, opt=None, epoch
             labels_conv = yb.cpu().numpy()
             conf_pred.append(predictions_conv)
             conf_label.append(labels_conv)
+
 
         if metric_b is not None:
             running_metrics += metric_b
@@ -66,11 +66,11 @@ def training(model, params):
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
     best_acc = 0
-    
+
     for epoch in tqdm(range(num_epochs)):
         #training
         model.train()
-        loss, metric = loss_epoch(model, loss_func, train_dl, sanity, optimizer)
+        loss, metric = loss_epoch(model, loss_func, train_dl, epoch, fold+1, sanity, optimizer)
         mlflow.log_metric("train loss", loss, epoch)
         mlflow.log_metric("train accuracy", metric, epoch)
         train_loss.append(loss)
@@ -79,7 +79,7 @@ def training(model, params):
         #validation
         model.eval()
         with torch.no_grad():
-            loss, metric = loss_epoch(model, loss_func, val_dl, sanity, epoch=epoch, fold=fold)
+            loss, metric = loss_epoch(model, loss_func, val_dl, epoch, fold+1, sanity)
         mlflow.log_metric("val loss", loss, epoch)
         mlflow.log_metric("val accuracy", metric, epoch)
         val_loss.append(loss)

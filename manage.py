@@ -74,18 +74,19 @@ class CreateImageDataset(Dataset):
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
 
-parser.add_argument('--model_type', type=str, choices=('cnn','vit'))  # 사용할 모델 선택
-parser.add_argument('--model_name', type=str)  # 사용할 세부 모델 선택
+parser.add_argument('--model_type', default ='vit', type=str)  # 사용할 모델 선택
+parser.add_argument('--model_name', default='vit_base_patch32_clip_448.laion2b_ft_in12k_in1k', type=str)  # 사용할 세부 모델 선택
+parser.add_argument('--run_name', default=None, type=str)  # run 이름 선택
 parser.add_argument('--sanity', default=False, type=bool)  # 빠른 test 여부
 
-parser.add_argument('--image_size', default=224, type=int, choices=(224,448))  # 이미지 크기 재설정
-parser.add_argument('--num_workers', default=4, type=int)  # 훈련에 사용할 CPU 코어 수
+parser.add_argument('--image_size', default=448, type=int, choices=(224,448))  # 이미지 크기 재설정
+parser.add_argument('--num_workers', default=4, type=int)  # 훈련에 사용할 코어 수
 
 parser.add_argument('--epochs', default=10, type=int)  # fold당 epoch
 parser.add_argument('--kfold', default=5, type=int)  # kfold 사이즈
 parser.add_argument('--batch_size', default=16, type=int)  # 배치 사이즈
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
-parser.add_argument('--log_epoch', default=5, type=int)  # 몇 epoch당 기록할 지 정함
+parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
@@ -94,7 +95,7 @@ parser.add_argument('--momentum', default=0.9, type=float)  # optimizer의 momen
 parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float)  # 가중치 정규화
 
 
-parser.add_argument('--data_path', default='/home/work/resized_image_datas/image_5class_5000/224/', type=str)  # data path
+parser.add_argument('--data_path', default='/home/work/resized_image_datas/image_5class_5000/448/', type=str)  # data path
 
 #parser.add_argument('--optim', default='ADAM')  # optimizer
 parser.add_argument('--pretrained', default=True, type=bool, help='use pre-trained model')  # pre-train 모델 사용 여부
@@ -152,7 +153,7 @@ load_run = args.load_run
 logged_model = args.logged_model #'runs:/523f68657d884879844be1c409bd96c0/best'
 
 experiment_name = args.model_type
-
+run_name = args.run_name
 params_vit = {
     'num_epochs':epochs,
     'batch_size':batch_size,
@@ -171,6 +172,7 @@ params_vit = {
     'logged_model':logged_model,
     'fold':0,
     'experiment_name':experiment_name,
+    'run_name':run_name,
 }
 
 
@@ -209,6 +211,6 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     model.cpu()
     del model
     gc.collect()
-    
-    
+
+
 torch.cuda.empty_cache()
