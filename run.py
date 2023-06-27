@@ -17,14 +17,15 @@ def run(model, params):
     'lr_scheduler':params['lr_scheduler'],
     'log_epoch':params['log_epoch'],
     'fold':params['fold'],
+    'signature':params['signature']
     }
     experiment_name = params['experiment_name']
     mlflow.set_experiment(experiment_name)
     
     now = dt.now()
     date_time_string = now.strftime("%Y-%m-%d %H:%M:%S")
-    
-    if run_name == None:
+
+    if params['run_name'] == None:
         run_name = f"{experiment_name} fold {params['fold'] + 1}: " + str(date_time_string)
     else:
         run_name = f"{params['run_name']} fold {params['fold'] + 1}: " + str(date_time_string)
@@ -57,5 +58,8 @@ def run(model, params):
         plt.legend()
         plt.title('Accuracy and Loss Plots')
         plt.show()
+        
+        mlflow.log_figure(plt, "Graph_"+str(params['log_epoch'])+'_'+str(params['fold+1'])+'.jpg')
+        plt.clf()
 
 

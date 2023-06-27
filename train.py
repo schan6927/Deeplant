@@ -63,6 +63,7 @@ def training(model, params):
     val_dl=params['val_dl']
     fold=params['fold']
     sanity=params['sanity_check']
+    signature=params['signature']
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
     best_acc = 0
@@ -87,13 +88,13 @@ def training(model, params):
         scheduler.step(val_loss[-1])
 
         if epoch % log_epoch == log_epoch-1:
-            mlflow.pytorch.log_model(model, f'model_fold_{fold+1}_epoch_{epoch}')
+            mlflow.pytorch.log_model(model, f'model_fold_{fold+1}_epoch_{epoch}', signature=signature)
             
         #saving best model
         if val_metric[-1]>best_acc:
             best_acc = val_metric[-1]
-            mlflow.set_tag("description", f'best at fold {fold+1}, epoch {epoch}')
-            mlflow.pytorch.log_model(model, f"best")
+            mlflow.set_tag("best", f'best at fold {fold+1}, epoch {epoch}')
+            mlflow.pytorch.log_model(model, f"best", signature=signature)
         print('The Validation Loss is {} and the validation accuracy is {}'.format(val_loss[-1],val_metric[-1]))
         print('The Training Loss is {} and the training accuracy is {}'.format(train_loss[-1],train_metric[-1]))
 

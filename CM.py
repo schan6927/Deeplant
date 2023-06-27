@@ -13,4 +13,7 @@ class SaveCM:
         figure = cfs.get_figure()
         
         # Save the plot as an image
-        mlflow.log_figure(figure, "Confusion_Matrix_"+str(fold+1)+'.jpg')
+        mlflow.log_figure(figure, "Confusion_Matrix_"+str(fold)+'_'+str(self.epoch)+'.jpg')
+        
+        #close figure
+        plt.clf()

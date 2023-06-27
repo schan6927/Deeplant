@@ -173,6 +173,7 @@ params_vit = {
     'fold':0,
     'experiment_name':experiment_name,
     'run_name':run_name,
+    'signature':None,
 }
 
 
@@ -182,7 +183,8 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     if load_run == True:
         model = mlflow.pytorch.load_model(logged_model)
     else:
-        model = timm.create_model(model_name, pretrained=pretrained, num_classes = num_classes)
+        model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+
 
     model = model.to(device)
     loss_func = nn.CrossEntropyLoss()
@@ -195,7 +197,7 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     val_dl = DataLoader(dataset, batch_size=batch_size, sampler=test_sampler, num_workers=num_workers, pin_memory=True)
 
     input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
-    output_schema = Schema([TensorSpec(np.dtype(np.float32), (-1, num_classes))])
+    output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
     signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
     # train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
@@ -207,6 +209,7 @@ for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))
     params_vit['train_dl']=train_dl
     params_vit['val_dl']=val_dl
     params_vit['fold']=fold
+    params_vit['signature']=signature
     run.run(model, params_vit)
     model.cpu()
     del model
