@@ -18,12 +18,12 @@ def run(model, params):
     'log_epoch':params['log_epoch'],
     'fold':params['fold'],
     }
-    experiment_name = "ViT"
+    experiment_name = params['experiment_name']
     mlflow.set_experiment(experiment_name)
-
+    
     now = dt.now()
     date_time_string = now.strftime("%Y-%m-%d %H:%M:%S")
-    run_name = f"ViT fold {params['fold'] + 1}: " + str(date_time_string)
+    run_name = f"{experiment_name} fold {params['fold'] + 1}: " + str(date_time_string)
 
     with mlflow.start_run(run_name=run_name) as run:
         print(run.info.run_id)
@@ -42,7 +42,7 @@ def run(model, params):
         mlflow.log_param("optimizer", params['optimizer'])
         mlflow.log_param("loss_func", params['loss_func'])
         mlflow.log_param("lr_scheduler", params['lr_scheduler'])
-
+        
         model, train_acc, val_acc, train_loss, val_loss = train.training(model, params_train)
         mlflow.pytorch.log_model(model, f"Fold {params['fold']+1} final")
 

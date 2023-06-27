@@ -1,11 +1,11 @@
 # Deeplant
 
 ## Argument
-* '--data_path', default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
+* --data_path, default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
 
 * --model_type, type=str, choices('cnn','vit')              # 사용할 모델 선택
 * --model_name, type=str                                    # 사용할 모델 선택
-* '--sanity', default=False, type=bool                      # 빠른 test 여부
+* --sanity, default=False, type=bool                        # 빠른 test 여부
 
 * --image_size, default=224, type=int, choices=(224,448)    # 이미지 크기 재설정
 * --num_workers, default=4, type=int                        # 훈련에 사용할 CPU 코어 수
