@@ -32,9 +32,8 @@
 >> * --weight_decay, --wd, default=5e-4, type=float            # 가중치 정규화
 
 # pip install
-pip install timm && pip install einops && pip install --upgrade huggingface_hub
+pip install timm && pip install einops && pip install --upgrade huggingface_hub \
 pip install transformers datsets accelerate nvidia-ml-py3
 
 # 기본 vit 실행 코드
-python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 \
---epochs 10 --batch_size 16 --log_epoch 5 
+python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 5 
