@@ -20,8 +20,6 @@
 
 * --factor, default=0.5, type=float                         # scheduler factor
 * --threshold, default=0.003, type=float                    # scheduler threshold
-* --momentum', default=0.9, type=float                      # optimizer의 momentum
-* --weight_decay, --wd, default=5e-4, type=float            # 가중치 정규화
 
 * --pretrained, default=True, type=bool                     # pre-train 모델 사용 여부
 * --load_run, default=False, type=bool                      # run의 모델 사용 여부
@@ -30,6 +28,8 @@
 > 추가 예정
 >> * optimizer
 >> * patience
+>> * --momentum, default=0.9, type=float                      # optimizer의 momentum
+>> * --weight_decay, --wd, default=5e-4, type=float            # 가중치 정규화
 
 # pip install
 pip install timm && pip install einops && pip install --upgrade huggingface_hub
