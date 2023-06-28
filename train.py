@@ -25,7 +25,7 @@ def training(model, params):
     for epoch in tqdm(range(num_epochs)):
 
         if epoch == num_epochs - 1:
-            df = pd.DataFrame(columns=['file_name', 'output', 'score', 'prediction'])
+            df = pd.DataFrame(columns=['file_name', '1++', '1+', '1', '2', '3', 'score', 'prediction'])
         else:
             df = None
 
@@ -104,7 +104,16 @@ def loss_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check=False, op
                 output = list(output.detach().cpu().numpy())
                 name_b = list(name_b)
                 for i in index:
-                    new_row = pd.DataFrame({'file_name':name_b[i], 'output':output[i], 'score':scores[i], 'prediction':predictions_conv[i]})
+                    data = {'file_name':name_b[i], 
+                            '1++':output[i][0],
+                            '1+':output[i][1],
+                            '1':output[i][2],
+                            '2':output[i][3],
+                            '3':output[i][4], 
+                            'score':scores[i], 
+                            'prediction':predictions_conv[i]}
+                    print(data)
+                    new_row = pd.DataFrame(data=data, index=['file_name'])
                     df = pd.concat([df,new_row], ignore_index=True)
 
 
