@@ -89,6 +89,7 @@ parser.add_argument('--patch_size', default=None, type=int)  # 패치 사이즈
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
 parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
+parser.add_argument('--mode', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
 parser.add_argument('--threshold', default=0.003, type=float)  # scheduler threshold
@@ -139,6 +140,7 @@ splits = KFold(n_splits = kfold, shuffle = True, random_state =42)
 
 #Define hyperparameters
 batch_size = args.batch_size
+patch_size = args.patch_size
 lr = args.lr
 epochs = args.epochs
 
@@ -149,14 +151,13 @@ num_classes = args.num_classes
 sanity = args.sanity
 pretrained = args.pretrained
 model_name = args.model_name
-
+mode = args.modes
 load_run = args.load_run
-logged_model = args.logged_model #'runs:/523f68657d884879844be1c409bd96c0/best'
+logged_model = args.logged_model
 
 experiment_name = args.model_type
 run_name = args.run_name
-
-
+#------------------------------------------------------
 
 mlflow.set_experiment(experiment_name)
 now = dt.now()
@@ -198,8 +199,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         else:
             model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
 
-        if args.model_type == 'vit' and args.patch_size is not None:
-            model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+        if args.model_type == 'vit' and patch_size is not None:
+            model.patch_embed.patch_size = (patch_size, patch_size)
         
         model = model.to(device)
         optimizer = optim.Adam(model.parameters(), lr = lr)
@@ -214,9 +215,6 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
         signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
-        # train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-        # val_dl = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-
         params_train = {
         'num_epochs':epochs,
         'optimizer':optimizer,
@@ -228,6 +226,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'log_epoch':log_epoch,
         'fold':fold,
         'signature':signature,
+        'mode':mode,
         }
 
         with mlflow.start_run(run_name=str(fold+1), nested=True) as run:
@@ -255,7 +254,16 @@ with mlflow.start_run(run_name=run_name) as parent_run:
     for i in range(epochs):
         mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
         mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
+        if mode == 'classification':
+            mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
+        elif mode == 'regression':
+            for j in range(len(train_acc_sum[i])):
+                mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
         mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
-        mlflow.log_metric("val accuracy", val_acc_sum[i] / kfold, i)
+        if mode == 'classification':
+            mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
+        elif mode == 'regression':
+            for j in range(len(train_acc_sum[i])):
+                mlflow.log_metric(f"val metric {j}",train_acc_sum[i][j]/ kfold , i)
 
 torch.cuda.empty_cache()
