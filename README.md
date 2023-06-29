@@ -25,6 +25,9 @@
 * --load_run, default=False, type=bool                      # run의 모델 사용 여부
 * --logged_model, default=None, type=str                    # 사용할 run의 path
 
+> Test 예정
+>> * --patch_size, defalut=None, type=int                   # patch size. 안 넣으면 모델 patch 따라감. ViT만 적용가능
+
 > 추가 예정
 >> * optimizer
 >> * patience

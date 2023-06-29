@@ -85,6 +85,7 @@ parser.add_argument('--num_workers', default=4, type=int)  # 훈련에 사용할
 parser.add_argument('--epochs', default=10, type=int)  # fold당 epoch
 parser.add_argument('--kfold', default=5, type=int)  # kfold 사이즈
 parser.add_argument('--batch_size', default=16, type=int)  # 배치 사이즈
+parser.add_argument('--patch_size', default=None, type=int)  # 패치 사이즈
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
 parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
@@ -107,8 +108,8 @@ args=parser.parse_args()
 
 
 #Define data pathes
-image_size = args.image_size
 #homepath = '/home/work/resized_image_datas/image_5class_5000/'
+image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
 valpath = os.path.join(datapath,'Valid')
@@ -165,6 +166,7 @@ train_acc_sum = np.zeros(epochs)
 val_acc_sum = np.zeros(epochs)
 train_loss_sum = np.zeros(epochs)
 val_loss_sum = np.zeros(epochs)
+
 if run_name == None:
     run_name = f"{experiment_name}: " + str(date_time_string)
 else:
@@ -196,6 +198,9 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         else:
             model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
 
+        if args.model_type == 'vit' and args.patch_size is not None:
+            model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+        
         model = model.to(device)
         optimizer = optim.Adam(model.parameters(), lr = lr)
         scheduler = ReduceLROnPlateau(optimizer, patience = 2, factor = args.factor, threshold = args.threshold)
