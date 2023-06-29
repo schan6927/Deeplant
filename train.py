@@ -112,7 +112,6 @@ def loss_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check=False, op
                             '3':output[i][4], 
                             'score':scores[i], 
                             'prediction':predictions_conv[i]}
-                    print(data)
                     new_row = pd.DataFrame(data=data, index=['file_name'])
                     df = pd.concat([df,new_row], ignore_index=True)
 
