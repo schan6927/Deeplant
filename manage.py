@@ -168,9 +168,9 @@ train_loss_sum = np.zeros(epochs)
 val_loss_sum = np.zeros(epochs)
 
 if run_name == None:
-    run_name = f"{experiment_name}: " + str(date_time_string)
+    run_name = experiment_name
 else:
-    run_name = f"{run_name}: " + str(date_time_string)
+    run_name = run_name
 
 # Start running
 with mlflow.start_run(run_name=run_name) as parent_run:
