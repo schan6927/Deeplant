@@ -78,7 +78,7 @@ parser.add_argument('--model_type', default ='vit', type=str)  # 사용할 모�
 parser.add_argument('--model_name', default='vit_base_patch32_clip_448.laion2b_ft_in12k_in1k', type=str)  # 사용할 세부 모델 선택
 parser.add_argument('--run_name', default=None, type=str)  # run 이름 선택
 parser.add_argument('--sanity', default=False, type=bool)  # 빠른 test 여부
-
+parser.add_argument('--mode', default='train', type=str) # 학습모드 / 평가모드
 parser.add_argument('--image_size', default=448, type=int, choices=(224,448))  # 이미지 크기 재설정
 parser.add_argument('--num_workers', default=4, type=int)  # 훈련에 사용할 코어 수
 
