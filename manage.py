@@ -244,7 +244,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             plt.plot(val_loss, label = 'val_loss')
             plt.legend()
             plt.title('Accuracy and Loss Plots')
-            figure = plt.figure()
+            figure = plt.gcf()
             mlflow.log_figure(figure, "Graph_"+str(log_epoch)+'_'+str(fold+1)+'.jpg')
             plt.clf()
 
