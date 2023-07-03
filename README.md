@@ -27,6 +27,7 @@
 
 > Test 예정
 >> * --patch_size, defalut=None, type=int                   # patch size. 안 넣으면 모델 patch 따라감. ViT만 적용가능
+>> * --mode, default='train', type = str                    # mode : train / test : test 인경우 모델의 결과만 출력/ 학습진행 x, 항상 pretrained 요구
 
 > 추가 예정
 >> * optimizer
