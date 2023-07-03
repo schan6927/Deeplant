@@ -66,7 +66,7 @@ def classification(model, params):
 
 
 # calculate the loss per epochs
-def classification_epoch(model, loss_func, dataset_dl, epoch, fold, mode, sanity_check=False, opt=None, df=None):
+def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check=False, opt=None, df=None):
     running_loss = 0.0
     running_metrics = 0.0
     len_data = len(dataset_dl.sampler)
