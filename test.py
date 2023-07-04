@@ -33,7 +33,7 @@ def classification(model, params):
         df.to_csv('temp_test/incorrect_data.csv')
         mlflow.log_artifact('temp_test/incorrect_data.csv',f'incorrect_data_epoch_{epoch}')
         return model, test_metric, test_loss
-    
+
 def classification_epoch(model, loss_func, dataset_dl, epoch, sanity_check=False, df=None):
     running_loss = 0.0
     running_metrics = 0.0
@@ -45,6 +45,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, sanity_check=False
     for xb, yb, name_b in tqdm(dataset_dl):
         xb = xb.to(device)
         yb = yb.to(device)
+        yb = yb[:,0]
         output = model(xb)
         loss_b = loss_func(output, yb)
         scores, pred_b = torch.max(output.data,1)

@@ -77,6 +77,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
     for xb, yb, name_b in tqdm(dataset_dl):
         xb = xb.to(device)
         yb = yb.to(device)
+        yb = yb[:,0]
         output = model(xb)
         loss_b = loss_func(output, yb)
         scores, pred_b = torch.max(output.data,1)

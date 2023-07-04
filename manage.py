@@ -47,20 +47,23 @@ def grade_encoding(x):
     return 0
 
 class CreateImageDataset(Dataset):
-    def __init__(self, labels, img_dir, index, columns, transform=None, target_transform=None):
+    def __init__(self, labels, img_dir, index, columns, algorithm, transform=None, target_transform=None):
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform
         self.img_labels = labels
         self.index = index
         self.columns = columns
+        self.algorithm = algorithm
 
     def __len__(self):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-
-        label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
+        if algorithm == 'classification':
+            label = torch.tensor(self.img_labels.iloc[idx, self.columns])
+        elif algorithm == 'regression':
+            label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
         name = self.img_labels.iloc[idx, self.index]
         grade = self.img_labels.iloc[idx]['grade']
         img_folder = f'grade_{grade}'
@@ -94,7 +97,7 @@ parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록�
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
 parser.add_argument('--algorithm', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
-parser.add_argument('--columns', default=[1], type=list) # 사용할 label의 column값을 정함.
+parser.add_argument('--columns', nargs='+', default=1, type=int) # 사용할 label의 column값을 정함.
 parser.add_argument('--index',default=0, type=int) # index로 사용할 column을 정함.
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
@@ -119,17 +122,18 @@ args=parser.parse_args()
 image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
-valpath = os.path.join(datapath,'Valid')
+#valpath = os.path.join(datapath,'Valid')
 
 train_label_set = pd.read_csv(f'{datapath}/train.csv')
-val_label_set = pd.read_csv(f'{datapath}/valid.csv')
+#val_label_set = pd.read_csv(f'{datapath}/valid.csv')
 
 train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
-val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
+#val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
 
 
 columns = args.columns
 index = args.index
+algorithm = args.algorithm
 
 def regression1(x):
     if x == '1++':
@@ -159,8 +163,8 @@ def regression2(x):
 
 train_label_set['regression1'] = train_label_set['grade'].apply(regression1)
 train_label_set['regression2'] = train_label_set['grade'].apply(regression2)
-val_label_set['regression1'] = val_label_set['grade'].apply(regression1)
-val_label_set['regression2'] = val_label_set['grade'].apply(regression2)
+#val_label_set['regression1'] = val_label_set['grade'].apply(regression1)
+#val_label_set['regression2'] = val_label_set['grade'].apply(regression2)
 print(train_label_set)
 
 #Define kfold
@@ -175,9 +179,10 @@ transforms.ToTensor(),
 ])
 
 #Define Data loader
-train_dataset = CreateImageDataset(train_label_set, trainpath, index, columns, transform=transformation)
-valid_dataset = CreateImageDataset(val_label_set, valpath, index, columns, transform=transformation)
-dataset = torch.utils.data.ConcatDataset([train_dataset, valid_dataset])
+#train_dataset = CreateImageDataset(train_label_set, trainpath, index, columns, transform=transformation)
+#valid_dataset = CreateImageDataset(val_label_set, valpath, index, columns, transform=transformation)
+#dataset = torch.utils.data.ConcatDataset([train_dataset, valid_dataset])
+dataset = CreateImageDataset(train_label_set, trainpath, index, columns, algorithm, transform=transformation)
 splits = KFold(n_splits = kfold, shuffle = True, random_state =42)
 
 #Define hyperparameters
@@ -190,12 +195,14 @@ log_epoch = args.log_epoch
 num_workers = args.num_workers
 num_classes = args.num_classes
 
+# +
 sanity = args.sanity
 pretrained = args.pretrained
 model_name = args.model_name
-algorithm = args.algorithm
+
 load_run = args.load_run
 logged_model = args.logged_model
+# -
 
 experiment_name = args.model_type
 run_name = args.run_name
