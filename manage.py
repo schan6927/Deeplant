@@ -46,23 +46,25 @@ def grade_encoding(x):
     return 0
 
 class CreateImageDataset(Dataset):
-    def __init__(self, labels, img_dir, transform=None, target_transform=None):
+    def __init__(self, labels, img_dir, index, columns, transform=None, target_transform=None):
         self.img_dir = img_dir
         self.transform = transform
         self.target_transform = target_transform
         self.img_labels = labels
+        self.index = index
+        self.columns = columns
 
     def __len__(self):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
 
-        label = torch.tensor(self.img_labels.iloc[idx, [3,4]], dtype=torch.float32)
+        label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
+        name = self.img_labels.iloc[idx, self.index]
         grade = self.img_labels.iloc[idx]['grade']
-        name = self.img_labels.iloc[idx]['file_name']
         img_folder = f'grade_{grade}'
         img_path = os.path.join(self.img_dir, img_folder)
-        img_path = os.path.join(img_path, self.img_labels.iloc[idx, 0])
+        img_path = os.path.join(img_path, name)
         image = Image.open(img_path)
         if self.transform:
             image = self.transform(image)
@@ -89,7 +91,10 @@ parser.add_argument('--patch_size', default=None, type=int)  # 패치 사이즈
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
 parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
+
 parser.add_argument('--mode', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
+parser.add_argument('--columns', default=[1], type=list) # 사용할 label의 column값을 정함.
+parser.add_argument('--index',default=0, type=int) # index로 사용할 column을 정함.
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
 parser.add_argument('--threshold', default=0.003, type=float)  # scheduler threshold
@@ -122,7 +127,9 @@ train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
 val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
 
 
-# +
+columns = args.columns
+index = args.index
+
 def regression1(x):
     if x == '1++':
         return 0.
@@ -154,7 +161,6 @@ train_label_set['regression2'] = train_label_set['grade'].apply(regression2)
 val_label_set['regression1'] = val_label_set['grade'].apply(regression1)
 val_label_set['regression2'] = val_label_set['grade'].apply(regression2)
 print(train_label_set)
-# -
 
 #Define kfold
 kfold = args.kfold
@@ -168,16 +174,16 @@ transforms.ToTensor(),
 ])
 
 #Define Data loader
-train_dataset = CreateImageDataset(train_label_set, trainpath, transform=transformation)
-valid_dataset = CreateImageDataset(val_label_set, valpath, transform=transformation)
+train_dataset = CreateImageDataset(train_label_set, trainpath, index, columns, transform=transformation)
+valid_dataset = CreateImageDataset(val_label_set, valpath, index, columns, transform=transformation)
 dataset = torch.utils.data.ConcatDataset([train_dataset, valid_dataset])
 splits = KFold(n_splits = kfold, shuffle = True, random_state =42)
 
 #Define hyperparameters
 batch_size = args.batch_size
 patch_size = args.patch_size
-lr = args.lr
 epochs = args.epochs
+lr = args.lr
 
 log_epoch = args.log_epoch
 num_workers = args.num_workers
@@ -299,11 +305,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         model.cpu()
         del model
         gc.collect()
-    
-    print(train_loss_sum)
-    print(train_acc_sum)
-    print(val_loss_sum)
-    print(train_acc_sum)
+
     for i in range(epochs):
         mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
         if mode == 'classification':

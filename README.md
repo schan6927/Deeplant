@@ -25,6 +25,10 @@
 * --load_run, default=False, type=bool                      # run의 모델 사용 여부
 * --logged_model, default=None, type=str                    # 사용할 run의 path
 
+* --columns, default=[1], type=list                         # 사용할 label의 column값을 정함.
+* --index, default=0, type=int                              # 이미지의 이름이 적힌 column을 지정함.
+* --mode, default='classification', type=str, choices=('classification, regression') # 모델 결과 설정
+
 > Test 예정
 >> * --patch_size, defalut=None, type=int                   # patch size. 안 넣으면 모델 patch 따라감. ViT만 적용가능
 
@@ -35,8 +39,14 @@
 >> * --weight_decay, --wd, default=5e-4, type=float            # 가중치 정규화
 
 # pip install
-pip install timm && pip install einops && pip install --upgrade huggingface_hub \
+```
+pip install timm && pip install einops && pip install --upgrade huggingface_hub
+```
+```
 pip install transformers datsets accelerate nvidia-ml-py3
+```
 
-# 기본 vit 실행 코드
-python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 5 
+# 예시 vit 실행 코드
+```
+python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 
+```
