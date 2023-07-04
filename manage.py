@@ -93,7 +93,7 @@ parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # lear
 parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록할 지 정함
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
-parser.add_argument('--mode', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
+parser.add_argument('--algorithm', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
 parser.add_argument('--columns', default=[1], type=list) # 사용할 label의 column값을 정함.
 parser.add_argument('--index',default=0, type=int) # index로 사용할 column을 정함.
 
@@ -193,7 +193,7 @@ num_classes = args.num_classes
 sanity = args.sanity
 pretrained = args.pretrained
 model_name = args.model_name
-mode = args.mode
+algorithm = args.algorithm
 load_run = args.load_run
 logged_model = args.logged_model
 
@@ -227,13 +227,13 @@ with mlflow.start_run(run_name=run_name) as parent_run:
     mlflow.log_param('batch_size', batch_size)
     mlflow.log_param("image_size", image_size)
 
-    if mode == 'classification':
+    if algorithm == 'classification':
         loss_func = nn.CrossEntropyLoss()
         train_acc_sum = np.zeros(epochs)
         val_acc_sum = np.zeros(epochs)
         train_loss_sum = np.zeros(epochs)
         val_loss_sum = np.zeros(epochs)
-    elif mode == 'regression':
+    elif algorithm == 'regression':
         loss_func = nn.MSELoss()
         train_acc_sum = np.zeros((epochs,num_classes))
         val_acc_sum = np.zeros((epochs,num_classes))
@@ -282,9 +282,9 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             }
 
             with mlflow.start_run(run_name=str(fold+1), nested=True) as run:
-                if mode == 'classification':
+                if algorithm == 'classification':
                     model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)
-                elif mode == 'regression':
+                elif algorithm == 'regression':
                     model, train_acc, val_acc, train_loss, val_loss = train.regression(model, params_train)
             
                 train_acc_sum += train_acc
@@ -305,15 +305,15 @@ with mlflow.start_run(run_name=run_name) as parent_run:
 
         for i in range(epochs):
             mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
-            if mode == 'classification':
+            if algorithm == 'classification':
                 mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
-            elif mode == 'regression':
+            elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
                     mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
             mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
-            if mode == 'classification':
+            if algorithm == 'classification':
                 mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
-            elif mode == 'regression':
+            elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
                     mlflow.log_metric(f"val metric {j}",train_acc_sum[i][j]/ kfold , i)
 
@@ -335,10 +335,14 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'test_dl':test_dl,
             'sanity_check':sanity,
             'loss_func':loss_func,
+            'num_classes':num_classes,
         }
 
         with mlflow.start_run(run_name='Test') as run:
-            model, test_acc, test_loss=test.testing(model,params_test)
+            if algorithm == 'classification':
+                model, test_acc, test_loss = test.classification(model, params_test)
+            elif algorithm == 'regression':
+                model, test_acc, test_loss = test.regression(model, params_test)
 
             plt.plot(test_acc, label = 'test_acc')
             plt.plot(test_loss, label = 'test_loss')

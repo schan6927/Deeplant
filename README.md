@@ -27,7 +27,7 @@
 
 * --columns, default=[1], type=list                         # 사용할 label의 column값을 정함.
 * --index, default=0, type=int                              # 이미지의 이름이 적힌 column을 지정함.
-* --mode, default='classification', type=str, choices=('classification, regression') # 모델 결과 설정
+* --algorithm, default='classification', type=str, choices=('classification, regression') # 모델 결과 설정
 
 > Test 예정
 >> * --patch_size, defalut=None, type=int                   # patch size. 안 넣으면 모델 patch 따라감. ViT만 적용가능
