@@ -79,7 +79,7 @@ parser.add_argument('--model_type', default ='vit', type=str)  # 사용할 모�
 parser.add_argument('--model_name', default='vit_base_patch32_clip_448.laion2b_ft_in12k_in1k', type=str)  # 사용할 세부 모델 선택
 parser.add_argument('--run_name', default=None, type=str)  # run 이름 선택
 parser.add_argument('--sanity', default=False, type=bool)  # 빠른 test 여부
-parser.add_argument('--mode', default='train', type=str) # 학습모드 / 평가모드
+parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드
 parser.add_argument('--image_size', default=448, type=int, choices=(224,448))  # 이미지 크기 재설정
 parser.add_argument('--num_workers', default=4, type=int)  # 훈련에 사용할 코어 수
 
@@ -216,9 +216,6 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
             signature = ModelSignature(inputs=input_schema, outputs=output_schema)
 
-            # train_dl = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-            # val_dl = DataLoader(valid_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
-
             params_train = {
             'num_epochs':epochs,
             'optimizer':optimizer,
@@ -250,12 +247,12 @@ with mlflow.start_run(run_name=run_name) as parent_run:
                 mlflow.log_figure(figure, "Graph_"+str(log_epoch)+'_'+str(fold+1)+'.jpg')
                 plt.clf()
 
-
         for i in range(epochs):
             mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
             mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
             mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             mlflow.log_metric("val accuracy", val_acc_sum[i] / kfold, i)
+
     elif args.mode =='test':
         if load_run ==True:
             model = mlflow.pytorch.load_model(logged_model)
@@ -265,8 +262,6 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         
         test_dl = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
 
-
-
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
         signature = ModelSignature(inputs=input_schema, outputs=output_schema)
@@ -275,11 +270,10 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'num_epochs':epochs,
             'test_dl':test_dl,
             'sanity_check':sanity,
-            'log_epoch':log_epoch,
-            'signature':signature,
+            'loss_func':loss_func,
         }
 
-        with mlflow.strat_run(run_name='Test_raw') as run:
+        with mlflow.start_run(run_name='Test') as run:
             model, test_acc, test_loss=test.testing(model,params_test)
 
             plt.plot(test_acc, label = 'test_acc')
@@ -296,7 +290,5 @@ with mlflow.start_run(run_name=run_name) as parent_run:
     model.cpu()
     del model
     gc.collect()
-
-
 
 torch.cuda.empty_cache()
