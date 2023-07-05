@@ -321,8 +321,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             if algorithm == 'classification':
                 mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
-                for j in range(len(train_acc_sum[i])):
-                    mlflow.log_metric(f"val metric {j}",train_acc_sum[i][j]/ kfold , i)
+                for j in range(len(val_acc_sum[i])):
+                    mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
 
     elif args.mode =='test':
         if load_run ==True:
@@ -331,7 +331,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             model.patch_embed.patch_size = (args.patch_size, args.patch_size)
         model = model.to(device)
         
-        test_dl = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
+        test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
