@@ -328,7 +328,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             model.patch_embed.patch_size = (args.patch_size, args.patch_size)
         model = model.to(device)
         
-        test_dl = DataLoader(train_dataset, batch_size=batch_size, num_workers=num_workers)
+        test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
