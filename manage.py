@@ -312,17 +312,14 @@ with mlflow.start_run(run_name=run_name) as parent_run:
 
         for i in range(epochs):
             mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
-            if algorithm == 'classification':
-                mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
-            elif algorithm == 'regression':
-                for j in range(len(train_acc_sum[i])):
-                    mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
             mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             if algorithm == 'classification':
+                mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
                 mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
-                    mlflow.log_metric(f"val metric {j}",train_acc_sum[i][j]/ kfold , i)
+                    mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
+                    mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
 
     elif args.mode =='test':
         if load_run ==True:
