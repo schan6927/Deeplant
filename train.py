@@ -83,6 +83,16 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
         scores, pred_b = torch.max(output.data,1)
         metric_b = (pred_b == yb).sum().item()
     
+        # L1 regularization =0.001
+        lambda1= 0.0000003
+        l1_regularization =0.0
+        for param in model.parameters():
+            l1_regularization +=torch.norm(param,1)
+        l1_regularization = lambda1 * l1_regularization
+        
+        running_loss += loss_b.item() + l1_regularization.item()
+        loss_b = loss_b + l1_regularization
+
         if opt is not None:
             opt.zero_grad()
             loss_b.backward()
@@ -115,7 +125,6 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
                     new_row = pd.DataFrame(data=data, index=['file_name'])
                     df = pd.concat([df,new_row], ignore_index=True)
 
-        running_loss += loss_b.item()
         if metric_b is not None:
             running_metrics += metric_b
 
