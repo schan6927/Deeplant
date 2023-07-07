@@ -77,7 +77,6 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
     for xb, yb, name_b in tqdm(dataset_dl):
         xb = xb.to(device)
         yb = yb.to(device)
-        yb = yb[:,0]
         output = model(xb)
         loss_b = loss_func(output, yb)
         scores, pred_b = torch.max(output.data,1)
@@ -210,10 +209,16 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
         
         metric_b = np.zeros(num_classes)
         total_loss = 0.0
-        for i in range(num_classes):
-            loss_b = loss_func(output[:, i], yb[:, i])
+        
+        if num_classes != 1:
+            for i in range(num_classes):
+                loss_b = loss_func(output[:, i], yb[:, i])
+                total_loss += loss_b
+                metric_b[i] += loss_b.item()
+        else:
+            loss_b = loss_func(output, yb)
             total_loss += loss_b
-            metric_b[i] += loss_b.item()
+            metric_b += loss_b.item()
 
         if opt is not None:
             opt.zero_grad()

@@ -256,10 +256,10 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             if load_run == True:
                 model = mlflow.pytorch.load_model(logged_model)
             else:
-                model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+                model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
 
-            if args.model_type == 'vit' and args.patch_size is not None:
-                model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+            if args.model_type == 'vit' and patch_size is not None:
+                model.patch_embed.patch_size = (patch_size, patch_size)
             
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr = lr)
@@ -330,7 +330,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         if args.model_type == 'vit' and args.patch_size is not None:
             model.patch_embed.patch_size = (args.patch_size, args.patch_size)
         model = model.to(device)
-        
+
         test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
