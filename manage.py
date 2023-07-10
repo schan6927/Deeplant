@@ -282,7 +282,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             if algorithm == 'classification':
                 mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
-                mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
+                mlflow.log_metric("val accuracy", val_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
                     mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
@@ -323,8 +323,13 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             mlflow.log_figure(figure, "Graph_"+str(log_epoch)+'_'+'test'+'.jpg')
             plt.clf()
 
-            mlflow.log_metric("teset accuracy", test_acc)
-            mlflow.log_metric("test loss", test_loss)
+            for i in range(epochs):
+                mlflow.log_metric("test loss", test_loss[i], i)
+                if algorithm == 'classification':
+                    mlflow.log_metric("test accuracy", test_acc[i], i)
+                elif algorithm == 'regression':
+                    for j in range(len(test_acc[i])):
+                        mlflow.log_metric(f"val metric {j}",test_acc[i][j] , i)
     
     model.cpu()
     del model
