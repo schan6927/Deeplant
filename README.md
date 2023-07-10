@@ -1,4 +1,4 @@
-# Deeplant
+![image](https://github.com/Deeplant2/Deeplant/assets/136285201/054490e1-9bb1-4cd5-acdd-ed090ffb759e)# Deeplant
 
 ## Argument
 * --data_path, default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
@@ -49,5 +49,8 @@ pip install transformers datsets accelerate nvidia-ml-py3
 
 # 예시 vit 실행 코드
 ```
-python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 
+python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
+```
+```
+python manage.py --run_name 'efficientnet-448-16' --model_type 'cnn' --model_name 'tf_efficientnetv2_l.in21k_ft_in1k' --image_size 448 --epochs 50 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
 ```
