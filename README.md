@@ -25,7 +25,7 @@
 * --load_run, default=False, type=bool                      # run의 모델 사용 여부
 * --logged_model, default=None, type=str                    # 사용할 run의 path
 
-* --columns, default=[1], type=list                         # 사용할 label의 column값을 정함.
+* --columns, default=1, type=int                            # 사용할 label의 column값을 정함. 여러개 입력 시 , 로 구분
 * --index, default=0, type=int                              # 이미지의 이름이 적힌 column을 지정함.
 * --algorithm, default='classification', type=str, choices=('classification, regression') # 모델 결과 설정
 
