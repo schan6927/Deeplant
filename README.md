@@ -1,5 +1,3 @@
-![image](https://github.com/Deeplant2/Deeplant/assets/136285201/054490e1-9bb1-4cd5-acdd-ed090ffb759e)# Deeplant
-
 ## Argument
 * --data_path, default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
 
