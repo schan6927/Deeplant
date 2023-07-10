@@ -118,7 +118,6 @@ args=parser.parse_args()
 
 
 #Define data pathes
-#homepath = '/home/work/resized_image_datas/image_5class_5000/'
 image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
@@ -130,42 +129,11 @@ train_label_set = pd.read_csv(f'{datapath}/train.csv')
 train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
 #val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
 
+print(train_label_set)
 
 columns = args.columns
 index = args.index
 algorithm = args.algorithm
-
-def regression1(x):
-    if x == '1++':
-        return 0.
-    elif x == '1+':
-         return 1.
-    elif x == '1':
-        return 2.
-    elif x == '2':
-        return 3.
-    elif x == '3':
-        return 4.
-    return 0
-
-def regression2(x):
-    if x == '1++':
-        return 4.
-    elif x == '1+':
-         return 3.
-    elif x == '1':
-        return 2.
-    elif x == '2':
-        return 1.
-    elif x == '3':
-        return 0.
-    return 0
-
-train_label_set['regression1'] = train_label_set['grade'].apply(regression1)
-train_label_set['regression2'] = train_label_set['grade'].apply(regression2)
-#val_label_set['regression1'] = val_label_set['grade'].apply(regression1)
-#val_label_set['regression2'] = val_label_set['grade'].apply(regression2)
-print(train_label_set)
 
 #Define kfold
 kfold = args.kfold
@@ -213,7 +181,6 @@ now = dt.now()
 date_time_string = now.strftime("%Y-%m-%d %H:%M:%S")
 
 
-
 if run_name == None:
     run_name = experiment_name
 else:
@@ -258,8 +225,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             else:
                 model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
 
-            if args.model_type == 'vit' and patch_size is not None:
-                model.patch_embed.patch_size = (patch_size, patch_size)
+            # if args.model_type == 'vit' and patch_size is not None:
+            #     model.patch_embed.patch_size = (patch_size, patch_size)
             
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr = lr)
@@ -312,18 +279,15 @@ with mlflow.start_run(run_name=run_name) as parent_run:
 
         for i in range(epochs):
             mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
+            mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             if algorithm == 'classification':
                 mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
+                mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
                     mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
-            mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
-            if algorithm == 'classification':
-                mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
-            elif algorithm == 'regression':
-                for j in range(len(val_acc_sum[i])):
                     mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
-
+                    
     elif args.mode =='test':
         if load_run ==True:
             model = mlflow.pytorch.load_model(logged_model)

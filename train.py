@@ -105,7 +105,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
             conf_label.append(labels_conv)
 
             if df is not None:
-                # 틀린 이미지 csv로 저장하는 부분
+                # 틀린 이미지 csv로 저장하는 부분. 현재 소 데이터에만 적용 가능.
                 index = torch.nonzero((pred_b != yb)).squeeze().cpu().tolist()
                 if not isinstance(index, list):
                     index = [index]  # index가 단일 값인 경우에 리스트로 변환하여 처리
@@ -174,8 +174,8 @@ def regression(model, params):
         model.eval()
         with torch.no_grad():
             loss, metric = regression_epoch(model, loss_func, val_dl, epoch, fold+1, num_classes, sanity)
-        mlflow.log_metric("val loss", loss, epoch)
 
+        mlflow.log_metric("val loss", loss, epoch)
         for i in range(num_classes):
             mlflow.log_metric(f"val metric {i}",metric[i], epoch)
         val_loss.append(loss)
@@ -201,7 +201,16 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
     running_loss = 0.0
     running_metrics = np.zeros(num_classes)
     len_data = len(dataset_dl.sampler)
-    df = pd.DataFrame(columns=['file_name','predict1','predict2','regression1','regression2'])
+
+    #-------------결과 저장할 data frame 정의하는 곳-------------
+    # 여기 바꾸면 아래 validation 저장하는 부분도 바꿔야함.
+    columns = ['file_name']
+    for i in range(num_classes):
+        columns.append(f'predict{i}')
+        columns.append(f'label{i}')
+    df = pd.DataFrame(columns=columns)
+    #----------------------------------------------------------
+
     for xb, yb, name_b in tqdm(dataset_dl):
         xb = xb.to(device)
         yb = yb.to(device)
@@ -210,6 +219,7 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
         metric_b = np.zeros(num_classes)
         total_loss = 0.0
         
+        # class가 1개일 때 개별 라벨이 list 형식아니라서 for문을 못 돌림. 그래서 일단 구분함.
         if num_classes != 1:
             for i in range(num_classes):
                 loss_b = loss_func(output[:, i], yb[:, i])
@@ -225,17 +235,16 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
             total_loss.backward()
             opt.step()
             
-            # validation값 저장하는 부분
+            #-------------------- validation값 저장하는 부분 -------------------------
+            # 여기 바꾸면 위에 data frame 정의하는 곳도 바꿔야함. 
             output = list(output.detach().cpu().numpy())
             yb = list(yb.cpu().numpy())
             name_b = list(name_b)
             for i in range(len(output)):
-                data = {'file_name':name_b[i],
-                        'predict1':output[i][0], 
-                        'predict2':output[i][1],
-                        'regression1':yb[i][0],
-                        'regression2':yb[i][1],
-                       }
+                data = {'file_name':name_b[i]}
+                for j in range(num_classes):
+                    data[f'predict{j}'] = output[i][j]
+                    data[f'label{j}'] = yb[i][j]
                 new_row = pd.DataFrame(data=data, index=['file_name'])
                 df = pd.concat([df,new_row], ignore_index=True)
 
@@ -243,6 +252,7 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
                 os.mkdir('temp')
             df.to_csv('temp/last_data.csv')
             mlflow.log_artifact('temp/last_data.csv', f'output_epoch_{epoch}')
+            #------------------------------------------------------------------------
 
         running_loss += total_loss.item()
         if metric_b is not None:
