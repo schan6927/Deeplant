@@ -45,10 +45,12 @@ pip install timm && pip install einops && pip install --upgrade huggingface_hub
 pip install transformers datsets accelerate nvidia-ml-py3
 ```
 
-# 예시 vit 실행 코드
+# 예시 실행 코드
+## vit
 ```
 python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
 ```
+## cnn
 ```
 python manage.py --run_name 'efficientnet-448-16' --model_type 'cnn' --model_name 'tf_efficientnetv2_l.in21k_ft_in1k' --image_size 448 --epochs 50 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
 ```
