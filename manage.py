@@ -309,7 +309,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'num_classes':num_classes,
         }
 
-        with mlflow.start_run(run_name='Test') as run:
+        with mlflow.start_run(run_name='Test', nested=True) as run:
             if algorithm == 'classification':
                 model, test_acc, test_loss = test.classification(model, params_test)
             elif algorithm == 'regression':
