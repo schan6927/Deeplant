@@ -60,14 +60,14 @@ class CreateImageDataset(Dataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-        if algorithm == 'classification':
+        if self.algorithm == 'classification':
             label = torch.tensor(self.img_labels.iloc[idx, self.columns])
-        elif algorithm == 'regression':
+        elif self.algorithm == 'regression':
             label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
         name = self.img_labels.iloc[idx, self.index]
-        grade = self.img_labels.iloc[idx]['grade']
-        img_folder = f'grade_{grade}'
-        img_path = os.path.join(self.img_dir, img_folder)
+        # grade = self.img_labels.iloc[idx]['grade']
+        # img_folder = f'grade_{grade}'
+        # img_path = os.path.join(self.img_dir, img_folder)
         img_path = os.path.join(img_path, name)
         image = Image.open(img_path)
         if self.transform:
@@ -97,7 +97,7 @@ parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록�
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
 parser.add_argument('--algorithm', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
-parser.add_argument('--columns', nargs='+', default=1, type=int) # 사용할 label의 column값을 정함.
+parser.add_argument('--columns', nargs='+', default=2, type=int) # 사용할 label의 column값을 정함.
 parser.add_argument('--index',default=0, type=int) # index로 사용할 column을 정함.
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
@@ -121,13 +121,8 @@ args=parser.parse_args()
 image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
-#valpath = os.path.join(datapath,'Valid')
-
-train_label_set = pd.read_csv(f'{datapath}/train.csv')
-#val_label_set = pd.read_csv(f'{datapath}/valid.csv')
-
+train_label_set = pd.read_csv(os.path.join(datapath,'train.csv'))
 train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
-#val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
 
 print(train_label_set)
 
@@ -140,6 +135,7 @@ kfold = args.kfold
 
 #Define input transform
 transformation = transforms.Compose([
+transforms.Resize([image_size,image_size]),
 transforms.RandomHorizontalFlip(p=0.3),
 transforms.RandomVerticalFlip(p=0.3),
 transforms.RandomRotation((-20,20)),
