@@ -60,15 +60,15 @@ class CreateImageDataset(Dataset):
         return len(self.img_labels)
 
     def __getitem__(self, idx):
-        if algorithm == 'classification':
+        if self.algorithm == 'classification':
             label = torch.tensor(self.img_labels.iloc[idx, self.columns])
-        elif algorithm == 'regression':
+        elif self.algorithm == 'regression':
             label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
         name = self.img_labels.iloc[idx, self.index]
-        grade = self.img_labels.iloc[idx]['grade']
-        img_folder = f'grade_{grade}'
-        img_path = os.path.join(self.img_dir, img_folder)
-        img_path = os.path.join(img_path, name)
+        # grade = self.img_labels.iloc[idx]['grade']
+        # img_folder = f'grade_{grade}'
+        # img_path = os.path.join(self.img_dir, img_folder)
+        img_path = os.path.join(self.img_dir, name)
         image = Image.open(img_path)
         if self.transform:
             image = self.transform(image)
@@ -97,7 +97,7 @@ parser.add_argument('--log_epoch', default=10, type=int)  # 몇 epoch당 기록�
 parser.add_argument('--num_classes', default=5, type=int)  # output class 개수
 
 parser.add_argument('--algorithm', default='classification', type=str, choices=('classification, regression'))  # classification, regression 중 선택
-parser.add_argument('--columns', nargs='+', default=1, type=int) # 사용할 label의 column값을 정함.
+parser.add_argument('--columns', nargs='+', default=2, type=int) # 사용할 label의 column값을 정함.
 parser.add_argument('--index',default=0, type=int) # index로 사용할 column을 정함.
 
 parser.add_argument('--factor', default=0.5, type=float)  # scheduler factor
@@ -106,11 +106,8 @@ parser.add_argument('--momentum', default=0.9, type=float)  # optimizer의 momen
 parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float)  # 가중치 정규화
 
 
-parser.add_argument('--data_path', default='/home/work/resized_image_datas/image_5class_5000/448/', type=str)  # data path
-
-#parser.add_argument('--optim', default='ADAM')  # optimizer
+parser.add_argument('--data_path', default='/home/work/original_cropped_image_dataset/image_5class_6000/448/', type=str)  # data path
 parser.add_argument('--pretrained', default=True, type=bool, help='use pre-trained model')  # pre-train 모델 사용 여부
-parser.add_argument('--load_run', default=False, type=bool, help='use runned model')  # run의 모델 사용 여부
 parser.add_argument('--logged_model', default=None, type=str, help='logged model path') # 사용할 run의 path
 
 args=parser.parse_args()
@@ -118,60 +115,24 @@ args=parser.parse_args()
 
 
 #Define data pathes
-#homepath = '/home/work/resized_image_datas/image_5class_5000/'
 image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
-#valpath = os.path.join(datapath,'Valid')
-
-train_label_set = pd.read_csv(f'{datapath}/train.csv')
-#val_label_set = pd.read_csv(f'{datapath}/valid.csv')
-
+train_label_set = pd.read_csv(os.path.join(datapath,'train.csv'))
 train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
-#val_label_set['grade_encode'] = val_label_set['grade'].apply(grade_encoding)
 
+print(train_label_set)
 
 columns = args.columns
 index = args.index
 algorithm = args.algorithm
-
-def regression1(x):
-    if x == '1++':
-        return 0.
-    elif x == '1+':
-         return 1.
-    elif x == '1':
-        return 2.
-    elif x == '2':
-        return 3.
-    elif x == '3':
-        return 4.
-    return 0
-
-def regression2(x):
-    if x == '1++':
-        return 4.
-    elif x == '1+':
-         return 3.
-    elif x == '1':
-        return 2.
-    elif x == '2':
-        return 1.
-    elif x == '3':
-        return 0.
-    return 0
-
-train_label_set['regression1'] = train_label_set['grade'].apply(regression1)
-train_label_set['regression2'] = train_label_set['grade'].apply(regression2)
-#val_label_set['regression1'] = val_label_set['grade'].apply(regression1)
-#val_label_set['regression2'] = val_label_set['grade'].apply(regression2)
-print(train_label_set)
 
 #Define kfold
 kfold = args.kfold
 
 #Define input transform
 transformation = transforms.Compose([
+transforms.Resize([image_size,image_size]),
 transforms.RandomHorizontalFlip(p=0.3),
 transforms.RandomVerticalFlip(p=0.3),
 transforms.RandomRotation((-20,20)),
@@ -213,7 +174,6 @@ now = dt.now()
 date_time_string = now.strftime("%Y-%m-%d %H:%M:%S")
 
 
-
 if run_name == None:
     run_name = experiment_name
 else:
@@ -253,13 +213,13 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):            
             print('Fold {}'.format(fold + 1))
 
-            if load_run == True:
+            if logged_model is not None:
                 model = mlflow.pytorch.load_model(logged_model)
             else:
-                model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+                model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
 
-            if args.model_type == 'vit' and args.patch_size is not None:
-                model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+            # if args.model_type == 'vit' and patch_size is not None:
+            #     model.patch_embed.patch_size = (patch_size, patch_size)
             
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr = lr)
@@ -315,21 +275,20 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             if algorithm == 'classification':
                 mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
-                mlflow.log_metric("val accuracy", train_acc_sum[i] / kfold , i)
+                mlflow.log_metric("val accuracy", val_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
                 for j in range(len(train_acc_sum[i])):
                     mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
                     mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
-
+                    
     elif args.mode =='test':
-        if load_run ==True:
+        if logged_model is not None:
             model = mlflow.pytorch.load_model(logged_model)
-        if args.model_type == 'vit' and args.patch_size is not None:
-            model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+        else:
+            model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
         model = model.to(device)
-        
-        test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
 
+        test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
         signature = ModelSignature(inputs=input_schema, outputs=output_schema)
@@ -342,7 +301,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'num_classes':num_classes,
         }
 
-        with mlflow.start_run(run_name='Test') as run:
+        with mlflow.start_run(run_name='Test', nested=True) as run:
             if algorithm == 'classification':
                 model, test_acc, test_loss = test.classification(model, params_test)
             elif algorithm == 'regression':
@@ -356,8 +315,13 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             mlflow.log_figure(figure, "Graph_"+str(log_epoch)+'_'+'test'+'.jpg')
             plt.clf()
 
-            mlflow.log_metric("teset accuracy", test_acc)
-            mlflow.log_metric("test loss", test_loss)
+            for i in range(epochs):
+                mlflow.log_metric("test loss", test_loss[i], i)
+                if algorithm == 'classification':
+                    mlflow.log_metric("test accuracy", test_acc[i], i)
+                elif algorithm == 'regression':
+                    for j in range(len(test_acc[i])):
+                        mlflow.log_metric(f"val metric {j}",test_acc[i][j] , i)
     
     model.cpu()
     del model
