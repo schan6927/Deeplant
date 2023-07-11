@@ -17,13 +17,13 @@
 * --lr, --learning_rate, default=1e-5, type=float           # learning rate
 * --log_epoch, default=5, type=int                          # 몇 epoch당 모델을 기록할 지 정함
 * --num_classes, default=5, type=int                        # output class 개수
+* --mode, default='train', type=str, choices=('train','test') # train 모드, test 모드 설정
 
 * --factor, default=0.5, type=float                         # scheduler factor
 * --threshold, default=0.003, type=float                    # scheduler threshold
 
 * --pretrained, default=True, type=bool                     # pre-train 모델 사용 여부
-* --load_run, default=False, type=bool                      # run의 모델 사용 여부
-* --logged_model, default=None, type=str                    # 사용할 run의 path
+* --logged_model, default=None, type=str                    # 사용할 run의 path, 넣으면 run을 부름.
 
 * --columns, default=[1], type=list                         # 사용할 label의 column값을 정함.
 * --index, default=0, type=int                              # 이미지의 이름이 적힌 column을 지정함.

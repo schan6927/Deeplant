@@ -68,7 +68,7 @@ class CreateImageDataset(Dataset):
         # grade = self.img_labels.iloc[idx]['grade']
         # img_folder = f'grade_{grade}'
         # img_path = os.path.join(self.img_dir, img_folder)
-        img_path = os.path.join(img_path, name)
+        img_path = os.path.join(self.img_dir, name)
         image = Image.open(img_path)
         if self.transform:
             image = self.transform(image)
@@ -106,11 +106,8 @@ parser.add_argument('--momentum', default=0.9, type=float)  # optimizer의 momen
 parser.add_argument('--weight_decay', '--wd', default=5e-4, type=float)  # 가중치 정규화
 
 
-parser.add_argument('--data_path', default='/home/work/resized_image_datas/image_5class_5000/448/', type=str)  # data path
-
-#parser.add_argument('--optim', default='ADAM')  # optimizer
+parser.add_argument('--data_path', default='/home/work/original_cropped_image_dataset/image_5class_6000/448/', type=str)  # data path
 parser.add_argument('--pretrained', default=True, type=bool, help='use pre-trained model')  # pre-train 모델 사용 여부
-parser.add_argument('--load_run', default=False, type=bool, help='use runned model')  # run의 모델 사용 여부
 parser.add_argument('--logged_model', default=None, type=str, help='logged model path') # 사용할 run의 path
 
 args=parser.parse_args()
@@ -216,7 +213,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         for fold, (train_idx,val_idx) in enumerate(splits.split(np.arange(len(dataset)))):            
             print('Fold {}'.format(fold + 1))
 
-            if load_run == True:
+            if logged_model is not None:
                 model = mlflow.pytorch.load_model(logged_model)
             else:
                 model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
@@ -285,14 +282,13 @@ with mlflow.start_run(run_name=run_name) as parent_run:
                     mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
                     
     elif args.mode =='test':
-        if load_run ==True:
+        if logged_model is not None:
             model = mlflow.pytorch.load_model(logged_model)
-        if args.model_type == 'vit' and args.patch_size is not None:
-            model.patch_embed.patch_size = (args.patch_size, args.patch_size)
+        else:
+            model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
         model = model.to(device)
 
         test_dl = DataLoader(dataset, batch_size=batch_size, num_workers=num_workers)
-
         input_schema = Schema([TensorSpec(np.dtype(np.float32),shape=(image_size,image_size))])
         output_schema = Schema([TensorSpec(np.dtype(np.float32), (1, num_classes))])
         signature = ModelSignature(inputs=input_schema, outputs=output_schema)
