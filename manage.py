@@ -32,20 +32,6 @@ from datetime import datetime as dt
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 
-
-def grade_encoding(x):
-    if x == '1++':
-        return 0
-    elif x == '1+':
-         return 1
-    elif x == '1':
-        return 2
-    elif x == '2':
-        return 3
-    elif x == '3':
-        return 4
-    return 0
-
 class CreateImageDataset(Dataset):
     def __init__(self, labels, img_dir, index, columns, algorithm, transform=None, target_transform=None):
         self.img_dir = img_dir
@@ -119,7 +105,6 @@ image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
 train_label_set = pd.read_csv(os.path.join(datapath,'train.csv'))
-train_label_set['grade_encode'] = train_label_set['grade'].apply(grade_encoding)
 
 print(train_label_set)
 
@@ -140,9 +125,6 @@ transforms.ToTensor(),
 ])
 
 #Define Data loader
-#train_dataset = CreateImageDataset(train_label_set, trainpath, index, columns, transform=transformation)
-#valid_dataset = CreateImageDataset(val_label_set, valpath, index, columns, transform=transformation)
-#dataset = torch.utils.data.ConcatDataset([train_dataset, valid_dataset])
 dataset = CreateImageDataset(train_label_set, trainpath, index, columns, algorithm, transform=transformation)
 splits = KFold(n_splits = kfold, shuffle = True, random_state =42)
 
@@ -218,8 +200,9 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             else:
                 model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True)
 
-            # if args.model_type == 'vit' and patch_size is not None:
-            #     model.patch_embed.patch_size = (patch_size, patch_size)
+            total_params = sum(p.numel() for p in model.parameters())
+            mlflow.log_param("total_parmas", total_params)
+
             
             model = model.to(device)
             optimizer = optim.Adam(model.parameters(), lr = lr)
