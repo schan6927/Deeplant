@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 import sklearn
+import math
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def classification(model, params):
@@ -24,10 +25,11 @@ def classification(model, params):
     best_acc = 0
     for epoch in tqdm(range(num_epochs)):
 
-        if epoch == num_epochs - 1:
-            df = pd.DataFrame(columns=['file_name', '1++', '1+', '1', '2', '3', 'score', 'prediction'])
-        else:
-            df = None
+#         if epoch == num_epochs - 1:
+#             df = pd.DataFrame(columns=['file_name', '1++', '1+', '1', '2', '3', 'score', 'prediction'])
+#         else:
+#             df = None
+        df = None
 
         #training
         model.train()
@@ -155,31 +157,36 @@ def regression(model, params):
     sanity=params['sanity_check']
     signature=params['signature']
     num_classes=params['num_classes']
+    columns_name=params['columns_name']
 
-    train_loss, val_loss, train_metric, val_metric =[], [], [], []
+    train_loss, val_loss, train_metric, val_metric, r2_list =[], [], [], [], []
     best_loss = -1.0
+    r2_score =0.0
     for epoch in tqdm(range(num_epochs)):
         
         #training
         model.train()
-        loss, metric = regression_epoch(model, loss_func, train_dl, epoch, fold+1, num_classes, sanity, optimizer)
+        loss, metric, _ = regression_epoch(model, loss_func, train_dl, epoch, num_classes, columns_name, sanity, optimizer)
         
         mlflow.log_metric("train loss", loss, epoch)
         for i in range(num_classes):
-            mlflow.log_metric(f"train metric {i}",metric[i], epoch)
+            mlflow.log_metric(f"train {columns_name[i]}",metric[i], epoch)
         train_loss.append(loss)
         train_metric.append(metric)
 
         #validation
         model.eval()
         with torch.no_grad():
-            loss, metric = regression_epoch(model, loss_func, val_dl, epoch, fold+1, num_classes, sanity)
+            loss, metric, r2_score = regression_epoch(model, loss_func, val_dl, epoch, num_classes, columns_name, sanity)
 
+        mlflow.log_metric('r2 score',r2_score, epoch)
         mlflow.log_metric("val loss", loss, epoch)
         for i in range(num_classes):
-            mlflow.log_metric(f"val metric {i}",metric[i], epoch)
+            mlflow.log_metric(f"val {columns_name[i]}",metric[i], epoch)
+     
         val_loss.append(loss)
         val_metric.append(metric)
+        r2_list.append(r2_score)
         scheduler.step(val_loss[-1])
 
         if epoch % log_epoch == log_epoch-1:
@@ -192,22 +199,25 @@ def regression(model, params):
             mlflow.pytorch.log_model(model, f"best", signature=signature)
         print('The Validation Loss is {} and the validation accuracy is {}'.format(val_loss[-1],val_metric[-1]))
         print('The Training Loss is {} and the training accuracy is {}'.format(train_loss[-1],train_metric[-1]))
+        print('The R2 score(fixed) is {}'.format(r2_score))
 
-    return model, train_metric, val_metric, train_loss, val_loss
+    return model, train_metric, val_metric, train_loss, val_loss, r2_list
 
 
 # calculate the loss per epochs
-def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, sanity_check=False, opt=None):
+def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name, sanity_check=False, opt=None):
     running_loss = 0.0
     running_metrics = np.zeros(num_classes)
+    running_y = None
+    running_output = None
     len_data = len(dataset_dl.sampler)
-
+    r2_score =0.0
     #-------------결과 저장할 data frame 정의하는 곳-------------
     # 여기 바꾸면 아래 validation 저장하는 부분도 바꿔야함.
     columns = ['file_name']
     for i in range(num_classes):
-        columns.append(f'predict{i}')
-        columns.append(f'label{i}')
+        columns.append('predict ' + columns_name[i])
+        columns.append('label ' + columns_name[i])
     df = pd.DataFrame(columns=columns)
     #----------------------------------------------------------
 
@@ -234,20 +244,39 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
             opt.zero_grad()
             total_loss.backward()
             opt.step()
-            
+        
+        if opt is None:
             #-------------------- validation값 저장하는 부분 -------------------------
             # 여기 바꾸면 위에 data frame 정의하는 곳도 바꿔야함. 
-            output = list(output.detach().cpu().numpy())
-            yb = list(yb.cpu().numpy())
+            output = output.detach().cpu().numpy()
+            yb = yb.cpu().numpy()
+            
+            if running_y is None:
+                running_y = np.array(yb)
+            else:
+                running_y = np.vstack((running_y,yb))
+                
+            if running_output is None:
+                running_output = np.array(output)
+            else:
+                running_output = np.vstack((running_output,output))
+            
+            output = list(output)
+            yb = list(yb)
             name_b = list(name_b)
             for i in range(len(output)):
                 data = {'file_name':name_b[i]}
-                for j in range(num_classes):
-                    data[f'predict{j}'] = output[i][j]
-                    data[f'label{j}'] = yb[i][j]
+                # class 개수 1개면 문제 생겨서 나눔.
+                if num_classes != 1:
+                    for j in range(num_classes):
+                        data['predict ' + columns_name[j]] = output[i][j]
+                        data['label ' + columns_name[j]] = yb[i][j]
+                else:
+                    data['predict ' + columns_name[0]] = output[i]
+                    data['label ' + columns_name[0]] = yb[i]
                 new_row = pd.DataFrame(data=data, index=['file_name'])
                 df = pd.concat([df,new_row], ignore_index=True)
-
+                
             if not os.path.exists('temp'):
                 os.mkdir('temp')
             df.to_csv('temp/last_data.csv')
@@ -260,8 +289,22 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, fold, num_classes, san
 
         if sanity_check is True:
             break
+    
+    if opt is None:
+        n = len(running_y)
+        print("n:",n)
+        y_mean = running_y.mean(axis=0)
+        print("y_mean:",y_mean)
+        ssr = np.square(running_y - running_output).sum(axis=0)
+        print("ssr:",ssr)
+        sst = np.square(running_y - y_mean).sum(axis=0)
+        print("sst:",sst)
+        print("1 - (ssr / sst):",1 - (ssr / sst))
+        r2_score = (1 - (ssr / sst)).mean()
+        print("r2_score:",r2_score)
 
     loss = running_loss / len_data
     metric = running_metrics / len_data
-    return loss, metric
+    return loss, metric, r2_score
+
 

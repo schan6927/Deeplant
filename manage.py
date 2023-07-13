@@ -1,6 +1,7 @@
 import torch
 import pandas as pd
 import numpy as np
+import math
 
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
@@ -51,10 +52,8 @@ class CreateImageDataset(Dataset):
         elif self.algorithm == 'regression':
             label = torch.tensor(self.img_labels.iloc[idx, self.columns], dtype=torch.float32)
         name = self.img_labels.iloc[idx, self.index]
-        # grade = self.img_labels.iloc[idx]['grade']
-        # img_folder = f'grade_{grade}'
-        # img_path = os.path.join(self.img_dir, img_folder)
-        img_path = os.path.join(self.img_dir, name)
+        img_path = os.path.join(self.img_dir, 'cow_data')
+        img_path = os.path.join(img_path, name)
         image = Image.open(img_path)
         if self.transform:
             image = self.transform(image)
@@ -98,26 +97,23 @@ parser.add_argument('--logged_model', default=None, type=str, help='logged model
 
 args=parser.parse_args()
 
-
-
 #Define data pathes
 image_size = args.image_size
 datapath = args.data_path
 trainpath = os.path.join(datapath,'Training')
 train_label_set = pd.read_csv(os.path.join(datapath,'train.csv'))
 
-print(train_label_set)
-
 columns = args.columns
 index = args.index
 algorithm = args.algorithm
+
+print(train_label_set)
 
 #Define kfold
 kfold = args.kfold
 
 #Define input transform
 transformation = transforms.Compose([
-transforms.Resize([image_size,image_size]),
 transforms.RandomHorizontalFlip(p=0.3),
 transforms.RandomVerticalFlip(p=0.3),
 transforms.RandomRotation((-20,20)),
@@ -149,6 +145,10 @@ logged_model = args.logged_model
 
 experiment_name = args.model_type
 run_name = args.run_name
+
+columns_name = train_label_set.columns[columns]
+if not isinstance(columns_name, list):
+    columns_name = [columns_name]  # columns_name이 단일 값인 경우에 리스트로 변환하여 처리
 #------------------------------------------------------
 
 mlflow.set_experiment(experiment_name)
@@ -188,6 +188,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         val_acc_sum = np.zeros((epochs,num_classes))
         train_loss_sum = np.zeros(epochs)
         val_loss_sum = np.zeros(epochs)
+        r2_score_sum = np.zeros(epochs)
     
     mlflow.log_param("loss_func", loss_func)
 
@@ -229,18 +230,22 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'fold':fold,
             'signature':signature,
             'num_classes':num_classes,
+            'columns_name':columns_name,
             }
 
             with mlflow.start_run(run_name=str(fold+1), nested=True) as run:
                 if algorithm == 'classification':
                     model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)
                 elif algorithm == 'regression':
-                    model, train_acc, val_acc, train_loss, val_loss = train.regression(model, params_train)
+                    model, train_acc, val_acc, train_loss, val_loss, r2_score = train.regression(model, params_train)
             
                 train_acc_sum += train_acc
                 val_acc_sum += val_acc
                 train_loss_sum += train_loss
                 val_loss_sum += val_loss
+
+                if algorithm == 'regression':
+                    r2_score_sum += r2_score
 
                 #plot the curves
                 plt.plot(train_acc, label = 'train_acc')
@@ -255,15 +260,22 @@ with mlflow.start_run(run_name=run_name) as parent_run:
 
         for i in range(epochs):
             mlflow.log_metric("train loss", train_loss_sum[i] / kfold, i)
-            mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
             if algorithm == 'classification':
                 mlflow.log_metric("train accuracy", train_acc_sum[i] / kfold , i)
                 mlflow.log_metric("val accuracy", val_acc_sum[i] / kfold , i)
             elif algorithm == 'regression':
-                for j in range(len(train_acc_sum[i])):
-                    mlflow.log_metric(f"train metric {j}",train_acc_sum[i][j]/ kfold , i)
-                    mlflow.log_metric(f"val metric {j}",val_acc_sum[i][j]/ kfold , i)
-                    
+                if num_classes != 1:
+                    for j in range(num_classes):
+                        mlflow.log_metric(f"train {columns_name[j]}",train_acc_sum[i][j]/ kfold , i)
+                        mlflow.log_metric(f"val {columns_name[j]}",val_acc_sum[i][j]/ kfold , i)
+                else:
+                    mlflow.log_metric(f"train {columns_name[0]}",train_acc_sum[i]/ kfold , i)
+                    mlflow.log_metric(f"val {columns_name[0]}",val_acc_sum[i]/ kfold , i)
+                mlflow.log_metric('r2 score', r2_score_sum[i] / kfold, i)
+
+            mlflow.log_metric("val loss", val_loss_sum[i] / kfold, i)
+  
+
     elif args.mode =='test':
         if logged_model is not None:
             model = mlflow.pytorch.load_model(logged_model)
@@ -282,13 +294,14 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             'sanity_check':sanity,
             'loss_func':loss_func,
             'num_classes':num_classes,
+            'columns_name':columns_name,
         }
 
         with mlflow.start_run(run_name='Test', nested=True) as run:
             if algorithm == 'classification':
                 model, test_acc, test_loss = test.classification(model, params_test)
             elif algorithm == 'regression':
-                model, test_acc, test_loss = test.regression(model, params_test)
+                model, test_acc, test_loss, r2_score = test.regression(model, params_test)
 
             plt.plot(test_acc, label = 'test_acc')
             plt.plot(test_loss, label = 'test_loss')
@@ -303,8 +316,12 @@ with mlflow.start_run(run_name=run_name) as parent_run:
                 if algorithm == 'classification':
                     mlflow.log_metric("test accuracy", test_acc[i], i)
                 elif algorithm == 'regression':
-                    for j in range(len(test_acc[i])):
-                        mlflow.log_metric(f"val metric {j}",test_acc[i][j] , i)
+                    if num_classes != 1:
+                        for j in range(num_classes):
+                            mlflow.log_metric(f"test {columns_name[j]}",test_acc[i][j]/ kfold , i)
+                    else:
+                        mlflow.log_metric(f"test {columns_name[0]}",test_acc[i]/ kfold , i)
+                    mlflow.log_metric('r2 score', r2_score[i] / kfold, i)
     
     model.cpu()
     del model
