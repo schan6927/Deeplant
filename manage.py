@@ -234,6 +234,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             }
 
             with mlflow.start_run(run_name=str(fold+1), nested=True) as run:
+                print(run.info.run_id)
                 if algorithm == 'classification':
                     model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)
                 elif algorithm == 'regression':
