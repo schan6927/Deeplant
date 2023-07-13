@@ -23,7 +23,7 @@
 * --pretrained, default=True, type=bool                     # pre-train 모델 사용 여부
 * --logged_model, default=None, type=str                    # 사용할 run의 path, 넣으면 run을 부름.
 
-* --columns, default=1, type=int                            # 사용할 label의 column값을 정함. 여러개 입력 시 , 로 구분
+* --columns, default=1, type=int                            # 사용할 label의 column값을 정함. 여러개 입력 시 ' '(공백)으로 구분
 * --index, default=0, type=int                              # 이미지의 이름이 적힌 column을 지정함.
 * --algorithm, default='classification', type=str, choices=('classification, regression') # 모델 결과 설정
 
@@ -49,6 +49,9 @@ pip install transformers datsets accelerate nvidia-ml-py3
 ## vit
 ```
 python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
+```
+```
+python manage.py --model_type 'vit' --model_name 'vit_base_patch32_clip_448.laion2b_ft_in12k_in1k' --image_size 448 --epochs 30 --batch_size 16 --log_epoch 10 --data_path '/home/work/deeplant_data/' --algorithm 'regression' --columns 4 5 6 7 8 --num_classes 5 --index 9 --run_name 'dp3-vit-448-16-32  
 ```
 ## cnn
 ```
