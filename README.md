@@ -51,7 +51,7 @@ pip install transformers datsets accelerate nvidia-ml-py3
 python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
 ```
 ```
-python manage.py --model_type 'vit' --model_name 'vit_base_patch32_clip_448.laion2b_ft_in12k_in1k' --image_size 448 --epochs 30 --batch_size 16 --log_epoch 10 --data_path '/home/work/deeplant_data/' --algorithm 'regression' --columns 4 5 6 7 8 --num_classes 5 --index 9 --run_name 'dp3-vit-448-16-32  
+python manage.py --model_type 'vit' --model_name 'vit_base_patch32_clip_448.laion2b_ft_in12k_in1k' --image_size 448 --epochs 30 --batch_size 16 --log_epoch 10 --data_path '/home/work/deeplant_data/' --algorithm 'regression' --columns 4 5 6 7 8 --num_classes 5 --index 9 --run_name 'dp5-vit-448-16-32'  
 ```
 ## cnn
 ```
