@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 def send_request(image_path):
-    url = "http://13.209.0.181:5000/predict"
+    url = "http://127.0.0.1:5000/predict"
     data = {"image_path": image_path}
     print(f"Data sent \t\t{datetime.now().time()}")
     response = requests.post(url, json=data)
