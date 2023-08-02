@@ -35,14 +35,3 @@ grade, marbling, color, texture, surfaceMoisture, marbling, overall = send_reque
     image_path
 )
 
-
-{
-    "color": 0.9657164812088013,
-    "gradeNum": "1+",
-    "marbling": 2.1435980796813965,
-    "overall": 0.22654150426387787,
-    "surfaceMoisture": 0.4809803366661072,
-    "texture": 0.8446391224861145,
-    "xai_gradeNum_imagePath": "https://xai-deep-plant-image.s3.ap-northeast-2.amazonaws.com/grade_xai.png",
-    "xai_imagePath": "https://xai-deep-plant-image.s3.ap-northeast-2.amazonaws.com/sensory_xai.png",
-}
