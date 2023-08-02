@@ -16,8 +16,8 @@ from torch import nn
 import train
 import test
 import analyze
-import Deeplant.models.model as m
-import Deeplant.models.dataset as dataset
+import models.model as m
+import models.dataset as dataset
 import argparse
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'

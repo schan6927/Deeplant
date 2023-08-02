@@ -3,7 +3,7 @@ import os
 from torchvision import transforms
 from PIL import Image
 from torch.utils.data import Dataset
-import Deeplant.graph as g
+import graph as g
 import math
 
 class CreateImageDataset(Dataset):
