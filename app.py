@@ -60,14 +60,12 @@ class MLModel:
 
     def process_image(self, image_path):
         try:
-            # Check if the image_path is a URL (from the internet)
             parsed_url = urlparse(image_path)
             if parsed_url.scheme in ("http", "https"):
                 res = requests.get(image_path)
                 res.raise_for_status()  # Raise an exception for any HTTP errors
                 image = Image.open(io.BytesIO(res.content))
             else:
-                # Assume the image_path is a local file path
                 image = Image.open(image_path)
 
             image = image.resize((448, 448))
