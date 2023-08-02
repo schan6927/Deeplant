@@ -16,8 +16,8 @@ from torch import nn
 import train
 import test
 import analyze
-import Deeplant.models.model as m
-import Deeplant.models.dataset as dataset
+import models.model as m
+import models.dataset as dataset
 import argparse
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -114,7 +114,7 @@ logged_model = args.logged_model
 experiment_name = args.model_type
 run_name = args.run_name
 
-#------------------------------------------------------
+# ------------------------------------------------------
 
 mlflow.set_tracking_uri('file:///home/work/model/multi_input_model/mlruns/')
 mlflow.set_experiment(experiment_name)
