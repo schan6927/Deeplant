@@ -19,7 +19,7 @@ def datasetHistogram(train_df, val_df, grade, name):
             plt.legend(labels=['valid', 'train'])
     mlflow.log_figure(fig, "Dataset_Histogram.jpg")
     plt.clf()
-    
+
 def datasetKDE(train_df, val_df, grade, name):
     fig = plt.figure(figsize=(30,20))
     i=0

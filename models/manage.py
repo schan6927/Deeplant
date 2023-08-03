@@ -16,8 +16,9 @@ from torch import nn
 import train
 import test
 import analyze
-import models.model as m
-import models.dataset as dataset
+import model as m
+import dataset as dataset
+import utils as utils
 import argparse
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -94,8 +95,8 @@ transforms.ToTensor(),
 ])
 
 #Define Data loader
-train_dataset = dataset.CreateImageDataset(train_set, trainpath, image_size, image_column, output_columns, input_columns, transform=transformation, train=True)
-test_dataset = dataset.CreateImageDataset(test_set, trainpath, image_size, image_column, output_columns, input_columns, transform=transformation, train=False)
+train_dataset = dataset.CreateImageDataset(train_set, trainpath, image_size, image_column, output_columns, input_columns, add_graphs, concat_graphs, transform=transformation, train=True)
+test_dataset = dataset.CreateImageDataset(test_set, trainpath, image_size, image_column, output_columns, input_columns, add_graphs, concat_graphs, transform=transformation, train=False)
 
 #Define hyperparameters
 batch_size = args.batch_size
@@ -141,6 +142,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
     mlflow.log_param('batch_size', batch_size)
     mlflow.log_param("image_size", image_size)
     mlflow.log_param("seed", seed)
+    utils.log_input(train_dataset)
+    
     
     analyze.datasetHistogram(train_set,test_set, ['1++', '1+', '2', '3'], columns_name)
     analyze.datasetKDE(train_set,test_set, ['1++', '1+', '2', '3'], columns_name)

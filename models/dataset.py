@@ -3,7 +3,7 @@ import os
 from torchvision import transforms
 from PIL import Image
 from torch.utils.data import Dataset
-import models.graph as g
+import graph as g
 import math
 
 class CreateImageDataset(Dataset):
@@ -89,7 +89,7 @@ class CreateImageDataset(Dataset):
             else:
                 print('invalid graph name')
 
-            transform(temp)
+            temp = transform(temp)
             add_graphs.append(temp)
 
         for graph in add_graphs:
@@ -99,7 +99,7 @@ class CreateImageDataset(Dataset):
     
     def concat_graph(self, image, transform, grade, img_path):
         concat_graphs = []
-        
+        toImage = transforms.ToPILImage()
         if self.add_graphs is None:
             return image
         
@@ -120,16 +120,19 @@ class CreateImageDataset(Dataset):
                 temp = Image.open(f'kde/kde_Total_{grade}.png')
             else:
                 print('invalid graph name')
-
-            transform(temp)
+            
+            temp = transform(temp)
+            temp = toImage(temp[0:3])
             concat_graphs.append(temp)
-
+            
+        image = toImage(image)
         w = math.ceil(math.sqrt(len(concat_graphs)))  
-        result_image = Image.new('RGB', self.image_size * w, self.image_size * w)
-        result_image.paste(image,(0,0))
+        result_image = Image.new('RGB', (self.image_size * w, self.image_size * w))
+        result_image.paste(image,(0,0,self.image_size,self.image_size))
         for i, graph in enumerate(concat_graphs):
             row = (i+1) // w
             col = (i+1) % w
-            result_image.paste(graph,(row*self.image_size, col*self.image_size))
+            result_image.paste(graph,(row*self.image_size, col*self.image_size, (row+1)*self.image_size, (col+1)*self.image_size))
+        result_image = transform(result_image)
         return result_image
 
