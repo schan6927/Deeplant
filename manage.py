@@ -58,6 +58,7 @@ parser.add_argument('--data_path', default='/home/work/deeplant_data', type=str)
 parser.add_argument('--pretrained', default=True, type=bool, help='use pre-trained model')  # pre-train 모델 사용 여부
 parser.add_argument('--logged_model', default=None, type=str, help='logged model path') # 사용할 run의 path
 parser.add_argument('--seed', default=42, type=int, help='random seed train/test set split') # train/test 섞을 때 seed 값
+parser.add_argument('--custom_fc', default=True, type=bool, help='use custom fc') # custom fc layer 사용 여부
 
 args=parser.parse_args()
 
@@ -93,8 +94,8 @@ transforms.ToTensor(),
 ])
 
 #Define Data loader
-train_dataset = dataset.CreateImageDataset(train_set, trainpath, image_size, image_column, input_columns, output_columns, transform=transformation, train=True)
-test_dataset = dataset.CreateImageDataset(test_set, trainpath, image_size, image_column, input_columns, output_columns, transform=transformation, train=False)
+train_dataset = dataset.CreateImageDataset(train_set, trainpath, image_size, image_column, output_columns, input_columns, transform=transformation, train=True)
+test_dataset = dataset.CreateImageDataset(test_set, trainpath, image_size, image_column, output_columns, input_columns, transform=transformation, train=False)
 
 #Define hyperparameters
 batch_size = args.batch_size
@@ -105,6 +106,7 @@ lr = args.lr
 log_epoch = args.log_epoch
 num_workers = args.num_workers
 num_classes = args.num_classes
+custom_fc = args.custom_fc
 
 sanity = args.sanity
 pretrained = args.pretrained
@@ -170,6 +172,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'pretrained':pretrained,
         'input_shape':input_shape, # input shape과 output shape은 모델 구조에 따라 잘 설정해야함.
         'output_shape':num_classes,
+        'custom_fc':custom_fc,
     }
 #------------------------------------------------------------------------------------
 

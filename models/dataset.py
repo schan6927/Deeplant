@@ -3,7 +3,7 @@ import os
 from torchvision import transforms
 from PIL import Image
 from torch.utils.data import Dataset
-import graph as g
+import models.graph as g
 import math
 
 class CreateImageDataset(Dataset):
@@ -61,17 +61,17 @@ class CreateImageDataset(Dataset):
         else:
             input = {'image':image}
         #------------------------------------------------------------------         
-        if self.first == True:
-            self.first = False
-            print('first')
 
         return input, output_label, name
     
 
     def add_graph(self, image, transform, grade, img_path):
         add_graphs = []
+        
+        if self.add_graphs is None:
+            return image
+        
         for graph in self.add_graphs:
-
             if graph == 'color':
                 temp = g.colorGraph(img_path)
             elif graph == 'gray':
@@ -99,8 +99,11 @@ class CreateImageDataset(Dataset):
     
     def concat_graph(self, image, transform, grade, img_path):
         concat_graphs = []
+        
+        if self.add_graphs is None:
+            return image
+        
         for graph in self.concat_graphs:
-
             if graph == 'color':
                 temp = g.colorGraph(img_path)
             elif graph == 'gray':
@@ -129,4 +132,4 @@ class CreateImageDataset(Dataset):
             col = (i+1) % w
             result_image.paste(graph,(row*self.image_size, col*self.image_size))
         return result_image
-            
+
