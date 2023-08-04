@@ -1,0 +1,9 @@
+[
+    {
+        "model_name":"vit_base_patch32_clip_448.laion2b_ft_in12k_in1k",
+        "num_classes":5,
+        "pretrained":true,
+        "islogged":false,
+        "features":null
+    }
+]

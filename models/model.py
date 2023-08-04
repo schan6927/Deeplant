@@ -20,50 +20,54 @@ class LastModule(nn.Module):
 class Model(nn.Module):
     def __init__(self,params):
         super(Model,self).__init__()
-        num_classes=params['num_classes']
-        pretrained=params['pretrained']
-        model_name=params['model_name']
-        logged_model=params['logged_model']
-        self.custom_fc=params['custom_fc']
-        #--------------------vit-----------------------
-        if logged_model is None:
-            temp_model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes, exportable=True )
-        else:
-            temp_model = torch.load(logged_model)
+        model_cfgs=params['model_cfgs']
+        self.fc_input_shape = 0
 
-        if self.custom_fc == True:
-            features={'fc_norm':'out'} # fc_norm, global_pool.flatten 
-            feature_extractor = create_feature_extractor(temp_model,return_nodes = features)
-            vmodel = feature_extractor
-            self.lastfc_layer =  LastModule(params)
-        else:
-            vmodel = temp_model
+        self.models = []
+        for model_cfg in model_cfgs:
+            model_name = model_cfg['model_name']
+            islogged = model_cfg['islogged']
+            features = model_cfg['features']
+            pretrained = model_cfg['pretrained']
+            num_classes = model_cfg['num_classes']
 
-        self.vision_model = vmodel
-        self.numeric_model = None
+            #--------------------vit-----------------------
+            if not islogged:
+                temp_model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
+            else:
+                temp_model = torch.load(model_name)
+
+            if features: 
+                feature_extractor = create_feature_extractor(temp_model,return_nodes = features)
+                temp_model = feature_extractor
+                
+            self.fc_input_shape += temp_model.state_dict()[list(temp_model.state_dict())[-1]].shape[-1]
+            self.models.append[temp_model]
+
+
+        params['input_shape']=self.fc_input_shape
+        self.lastfc_layer = LastModule(params)
 
         #interoutput
         self.interoutput = None
 
-    def forward(self, image, num=None):
+    def forward(self, inputs):
+        output = None
         
-        if self.custom_fc == True:
-            image_output = self.vision_model(image)['out'] # [batch, 768]
-        else:
-            image_output = self.vision_model(image)
+        for idx, model in enumerate(self.models):
+            input = inputs[idx].cuda()
+            try:
+                x = model(input)['out']
+            except:
+                x = model(input)
 
-        if num is not None:
-            if self.numeric_model is None:
-                num_output = num
+            if output is None:
+                output = x
             else:
-                num_output = self.numeric_model(num)
-            output = torch.cat([image_output, num_output], dim=-1)
-        else:
-            output = image_output
+                output = torch.cat([output,x], dim=-1)
 
         self.interoutput = output
-        if self.custom_fc == True:
-            output = self.lastfc_layer(output)
+        output = self.lastfc_layer(output)
             
         return output
     

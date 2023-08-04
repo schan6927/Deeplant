@@ -20,6 +20,7 @@ import model as m
 import dataset as dataset
 import utils as utils
 import argparse
+import json
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
@@ -27,7 +28,7 @@ print(device)
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
 
 parser.add_argument('--model_type', default ='vit', type=str)  # 사용할 모델 선택
-parser.add_argument('--model_name', default='vit_base_patch32_clip_448.laion2b_ft_in12k_in1k', type=str)  # 사용할 세부 모델 선택
+parser.add_argument('--model_cfgs', default='model_cfgs.json', type=str)  # 사용할 세부 모델 선택
 parser.add_argument('--run_name', default=None, type=str)  # run 이름 선택
 parser.add_argument('--sanity', default=False, type=bool)  # 빠른 test 여부
 parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드
@@ -110,12 +111,12 @@ num_classes = args.num_classes
 custom_fc = args.custom_fc
 
 sanity = args.sanity
-pretrained = args.pretrained
-model_name = args.model_name
-logged_model = args.logged_model
 
 experiment_name = args.model_type
 run_name = args.run_name
+
+with open(args.model_cfgs, 'r') as json_file:
+    model_cfgs = json.load(json_file)
 
 # ------------------------------------------------------
 
@@ -130,13 +131,7 @@ else:
 # Start running
 with mlflow.start_run(run_name=run_name) as parent_run:
     print(parent_run.info.run_id)
-    if logged_model == None:
-        mlflow.log_param("model_name", model_name)
-        mlflow.log_param('pretrained', pretrained)
-    else:
-        mlflow.log_param("model_name", logged_model)
-        mlflow.log_param("pretrained", True)
-
+    mlflow.log_dict(model_cfgs)
     mlflow.log_param("num_epochs", epochs)
     mlflow.log_param("learning_rate", lr)
     mlflow.log_param('batch_size', batch_size)
@@ -150,29 +145,15 @@ with mlflow.start_run(run_name=run_name) as parent_run:
     
     if algorithm == 'classification':
         loss_func = nn.CrossEntropyLoss()
-        train_acc_sum = np.zeros(epochs)
-        val_acc_sum = np.zeros(epochs)
-        train_loss_sum = np.zeros(epochs)
-        val_loss_sum = np.zeros(epochs)
     elif algorithm == 'regression':
         loss_func = nn.MSELoss()
-        train_mae_sum = np.zeros((epochs, num_classes))
-        val_mae_sum = np.zeros((epochs, num_classes))
-        train_acc_sum = np.zeros((epochs,num_classes))
-        val_acc_sum = np.zeros((epochs,num_classes))
-        train_loss_sum = np.zeros(epochs)
-        val_loss_sum = np.zeros(epochs)
-        r2_score_sum = np.zeros(epochs)
     
     mlflow.log_param("loss_func", loss_func)
 
 
 #---------------모델 바꿀 시 model.py 파일과 이 부분을 바꿔주면 됨----------------------
     params_model = {
-        'model_name':model_name,
-        'num_classes':num_classes,
-        'logged_model':logged_model,
-        'pretrained':pretrained,
+        'model_cfgs':model_cfgs,
         'input_shape':input_shape, # input shape과 output shape은 모델 구조에 따라 잘 설정해야함.
         'output_shape':num_classes,
         'custom_fc':custom_fc,
@@ -206,16 +187,6 @@ with mlflow.start_run(run_name=run_name) as parent_run:
             model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)
         elif algorithm == 'regression':
             model, train_acc, val_acc, train_loss, val_loss, r2_score, train_mae, val_mae = train.regression(model, params_train)
-
-        train_acc_sum += train_acc
-        val_acc_sum += val_acc
-        train_loss_sum += train_loss
-        val_loss_sum += val_loss
-
-        if algorithm == 'regression':
-            train_mae_sum += train_mae
-            val_mae_sum += val_mae
-            r2_score_sum += r2_score
 
     elif args.mode =='test':
         model = m.Model(params_model)
