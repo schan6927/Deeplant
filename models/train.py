@@ -225,13 +225,8 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
     #----------------------------------------------------------
 
     for xb, yb, name_b in tqdm(dataset_dl):
-        imageb = xb['image'].to(device)
-        if 'input_label' in xb:
-            inputb = xb['input_label'].to(device)
-        else:
-            inputb = None
         yb = yb.to(device)
-        output = model(imageb, inputb)
+        output = model(xb)
         
         metric_b = np.zeros(num_classes)
         total_loss = 0.0

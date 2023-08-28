@@ -18,13 +18,13 @@ class LastModule(nn.Module):
         return x
 
 class Model(nn.Module):
-    def __init__(self,params):
+    def __init__(self,model_cfgs):
         super(Model,self).__init__()
-        model_cfgs=params['model_cfgs']
+        
         self.fc_input_shape = 0
-
         self.models = []
-        for model_cfg in model_cfgs:
+
+        for model_cfg in model_cfgs['models']:
             model_name = model_cfg['model_name']
             islogged = model_cfg['islogged']
             features = model_cfg['features']
@@ -44,15 +44,17 @@ class Model(nn.Module):
             self.fc_input_shape += temp_model.state_dict()[list(temp_model.state_dict())[-1]].shape[-1]
             self.models.append[temp_model]
 
-
-        params['input_shape']=self.fc_input_shape
-        self.lastfc_layer = LastModule(params)
+        if model_cfgs['fc_layer']:
+            model_cfgs['fc_layer']['input_shape'] = self.fc_input_shape
+            self.lastfc_layer = LastModule(model_cfgs['fc_layer'])
+        else:
+            self.lastfc_layer = None
 
         #interoutput
         self.interoutput = None
 
     def forward(self, inputs):
-        output = None
+        outputs = []
         
         for idx, model in enumerate(self.models):
             input = inputs[idx].cuda()
@@ -60,17 +62,13 @@ class Model(nn.Module):
                 x = model(input)['out']
             except:
                 x = model(input)
+            outputs.append(x)
 
-            if output is None:
-                output = x
-            else:
-                output = torch.cat([output,x], dim=-1)
-
-        self.interoutput = output
-        output = self.lastfc_layer(output)
+        output = torch.concat(outputs,dim=-1)
+        if self.lastfc_layer:
+            output = self.lastfc_layer(output)
             
         return output
     
     def shap_layer(self):
         return self.interoutput
-
