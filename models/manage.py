@@ -84,12 +84,10 @@ lr = args.lr
 
 log_epoch = args.log_epoch
 num_workers = args.num_workers
-num_classes = args.num_classes
-custom_fc = args.custom_fc
 
 sanity = args.sanity
 
-experiment_name = args.model_type
+experiment_name = args.experiment_name
 run_name = args.run_name
 
 
@@ -107,12 +105,12 @@ else:
 # Start running
 with mlflow.start_run(run_name=run_name) as parent_run:
     print(parent_run.info.run_id)
-    mlflow.log_dict(model_cfgs)
+    mlflow.log_dict(model_cfgs, 'config/configs.json')
     mlflow.log_param("num_epochs", epochs)
     mlflow.log_param("learning_rate", lr)
     mlflow.log_param('batch_size', batch_size)
     mlflow.log_param("seed", seed)
-    utils.log_input(train_dataset)
+    #utils.log_input(train_dataset)
     
     
     analyze.datasetHistogram(train_set,test_set, ['1++', '1+', '2', '3'], columns_name)
@@ -146,7 +144,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'sanity_check':sanity,
         'lr_scheduler':scheduler,
         'log_epoch':log_epoch,
-        'num_classes':num_classes,
+        'num_classes':len(model_cfgs['output_columns']),
         'columns_name':columns_name,
         }
         if algorithm == 'classification':
