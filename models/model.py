@@ -22,7 +22,7 @@ class LastModule(nn.Module):
 class Model(nn.Module):
     def __init__(self,model_cfgs):
         super(Model,self).__init__()
-        
+        self.algorithm="regression"
         self.fc_input_shape = 0
         self.models = []
 
@@ -87,5 +87,5 @@ class Model(nn.Module):
             
         return output
     
-    def shap_layer(self):
-        return self.interoutput
+    def algorithm(self):
+        return self.algortihm
