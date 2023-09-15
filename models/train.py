@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 import sklearn
-import math
-import analyze
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def classification(model, params):
@@ -18,9 +17,6 @@ def classification(model, params):
     log_epoch=params['log_epoch']
     train_dl=params['train_dl']
     val_dl=params['val_dl']
-    fold=params['fold']
-    sanity=params['sanity_check']
-    signature=params['signature']
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
     best_acc = 0
@@ -34,7 +30,7 @@ def classification(model, params):
 
         #training
         model.train()
-        loss, metric, _ = classification_epoch(model, loss_func, train_dl, epoch, fold+1, sanity, optimizer)
+        loss, metric, _ = classification_epoch(model, loss_func, train_dl, epoch,optimizer)
         mlflow.log_metric("train loss", loss, epoch)
         mlflow.log_metric("train accuracy", metric, epoch)
         train_loss.append(loss)
@@ -43,7 +39,7 @@ def classification(model, params):
         #validation
         model.eval()
         with torch.no_grad():
-            loss, metric, df = classification_epoch(model, loss_func, val_dl, epoch, fold+1, sanity, df=df)
+            loss, metric, df = classification_epoch(model, loss_func, val_dl, epoch, df=df)
         mlflow.log_metric("val loss", loss, epoch)
         mlflow.log_metric("val accuracy", metric, epoch)
         val_loss.append(loss)
@@ -51,13 +47,13 @@ def classification(model, params):
         scheduler.step(val_loss[-1])
 
         if epoch % log_epoch == log_epoch-1:
-            mlflow.pytorch.log_model(model, f'model_fold_{fold+1}_epoch_{epoch}', signature=signature)
+            mlflow.pytorch.log_model(model, f'epoch_{epoch}')
             
         #saving best model
         if val_metric[-1]>best_acc:
             best_acc = val_metric[-1]
             mlflow.set_tag("best", f'best at epoch {epoch}')
-            mlflow.pytorch.log_model(model, f"best", signature=signature)
+            mlflow.pytorch.log_model(model, f"best")
         print('The Validation Loss is {} and the validation accuracy is {}'.format(val_loss[-1],val_metric[-1]))
         print('The Training Loss is {} and the training accuracy is {}'.format(train_loss[-1],train_metric[-1]))
 
@@ -154,7 +150,6 @@ def regression(model, params):
     log_epoch=params['log_epoch']
     train_dl=params['train_dl']
     val_dl=params['val_dl']
-    sanity=params['sanity_check']
     num_classes=params['num_classes']
     columns_name=params['columns_name']
 
@@ -164,7 +159,7 @@ def regression(model, params):
         
         #training
         model.train()
-        loss, acc, _, mae = regression_epoch(model, loss_func, train_dl, epoch, num_classes, columns_name, sanity, optimizer)
+        loss, acc, _, mae = regression_epoch(model, loss_func, train_dl, epoch, num_classes, columns_name, optimizer)
         
         mlflow.log_metric("train loss", loss, epoch)
         for i in range(num_classes):
@@ -177,7 +172,7 @@ def regression(model, params):
         #validation
         model.eval()
         with torch.no_grad():
-            loss, acc, r2_score, mae = regression_epoch(model, loss_func, val_dl, epoch, num_classes, columns_name, sanity)
+            loss, acc, r2_score, mae = regression_epoch(model, loss_func, val_dl, epoch, num_classes, columns_name)
 
         mlflow.log_metric('r2 score',r2_score, epoch)
         mlflow.log_metric("val loss", loss, epoch)
@@ -207,7 +202,7 @@ def regression(model, params):
 
 
 # calculate the loss per epochs
-def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name, sanity_check=False, opt=None):
+def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name,opt=None):
     running_loss = 0.0
     running_mae = np.zeros(num_classes)
     running_acc = np.zeros(num_classes)
@@ -306,9 +301,6 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
                 new_row = pd.DataFrame(data=data, index=['file_name'])
                 df = pd.concat([df,new_row], ignore_index=True)
             #------------------------------------------------------------------------
-
-        if sanity_check is True:
-            break
     
     if opt is None:
         y_mean = running_y.mean(axis=0)
@@ -320,7 +312,6 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
             os.mkdir('temp')
         df.to_csv('temp/valid_output_data.csv')
         mlflow.log_artifact('temp/valid_output_data.csv', f'output_epoch_{epoch}')
-        analyze.outputKDE(df,columns_name, epoch)
         
     if opt is not None:
         if not os.path.exists('temp'):
