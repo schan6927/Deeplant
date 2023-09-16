@@ -36,6 +36,9 @@ class test_model(nn.Module):
     def __init__(self):
         super(test_model,self).__init__()
         self.algorithm = "regression"
+        
+        # 첫 층의 모델들을 저장함.
+        # 모델 위에 모델을 올릴거면 잘 고쳐야함. 
         self.models=[]
 
         temp_model = timm.create_model("vit_base_patch32_clip_448.laion2b_ft_in12k_in1k", pretrained=True, num_classes=5)
@@ -43,8 +46,8 @@ class test_model(nn.Module):
         feature_extractor = create_feature_extractor(temp_model, return_nodes = features)
         numeric_model = num_model()
 
-        self.models.append(feature_extractor)
-        self.models.append(num_model)
+        self.models.append(feature_extractor.to(device))
+        self.models.append(numeric_model.to(device))
 
         self.lastfc_layer =  LastModule()
 
@@ -52,6 +55,7 @@ class test_model(nn.Module):
     def forward(self, inputs):
         outputs = []
         
+        #-------------첫 층의 결과를 계산함----------
         for idx, model in enumerate(self.models):
             input = inputs[idx].to(device)
             x = model(input)
@@ -60,9 +64,10 @@ class test_model(nn.Module):
             except:
                 None
             outputs.append(x)
-
-        output = torch.concat(outputs,dim=-1)
-        output = self.lastfc_layer(output)
+        #------------------------------------------
+        output = torch.concat(outputs,dim=-1) # 결과들을 concat함
+    
+        output = self.lastfc_layer(output) # 다음 레이어 계산
             
         return output
 
