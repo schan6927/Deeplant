@@ -15,7 +15,7 @@ from torch import nn
 
 import train
 import test
-import model as m
+import .models.make_model as m
 import dataset as dataset
 import utils as utils
 import argparse
@@ -36,6 +36,7 @@ seed=42
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
 
+parser.add_argument('--run', default ='proto', type=str)  # run 이름 설정
 parser.add_argument('--name', default ='proto', type=str)  # experiment 이름 설정
 parser.add_argument('--model_cfgs', default='model_cfgs.json', type=str)  # 
 parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드
@@ -73,6 +74,7 @@ epochs = args.epochs
 lr = args.lr
 log_epoch = args.log_epoch
 experiment_name = args.name
+run_name = args.run
 
 # ------------------------------------------------------
 
@@ -80,14 +82,14 @@ mlflow.set_tracking_uri('file:///home/work/model/multi_input_model/mlruns/')
 mlflow.set_experiment(experiment_name)
 
 # Start running
-with mlflow.start_run(run_name=experiment_name) as parent_run:
+with mlflow.start_run(run_name=run_name) as parent_run:
     print(parent_run.info.run_id)
     mlflow.log_dict(model_cfgs, 'config/configs.json')
     mlflow.log_param("num_epochs", epochs)
     mlflow.log_param("learning_rate", lr)
 
     if args.mode =='train':
-        model = m.Model(model_cfgs)
+        model = m.create_model(model_cfgs)
         model = model.to(device)
         total_params = sum(p.numel() for p in model.parameters())
         mlflow.log_param("total_parmas", total_params)
@@ -114,7 +116,6 @@ with mlflow.start_run(run_name=experiment_name) as parent_run:
              model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)
         elif algorithm == 'regression':
              model, train_acc, val_acc, train_loss, val_loss, r2_score, train_mae, val_mae = train.regression(model, params_train)
-
 
     model.cpu()
     del model

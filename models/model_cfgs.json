@@ -2,11 +2,9 @@
 {
     "models":[
         {
-            "model_name":"vit_base_patch32_clip_448.laion2b_ft_in12k_in1k",
-            "num_classes":5,
-            "pretrained":true,
-            "islogged":false,
-            "features":null
+            "module":"vit448_grade",
+            "model_name":null,
+            "islogged":null
         }
     ],
     "datasets":[
@@ -14,11 +12,12 @@
             "image_size":448,
             "isImage":true,
             "input_column": 1
+        },
+        {
+            "image_size":null,
+            "isImage":false,
+            "input_column": [14,15,16,17]
         }
     ],
-    "fc_layer": {
-        "output_shape":5
-    },
     "output_columns": [8,9,10,11,12]
 }
-
