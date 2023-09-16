@@ -1,0 +1,23 @@
+
+{
+    "models":{
+        "module":"vit448_grade",
+        "model_name":null,
+        "islogged":null,
+        "num_classes":null,
+        "pretrained":null
+    },
+    "datasets":[
+        {
+            "image_size":448,
+            "isImage":true,
+            "input_column": 13
+        },
+        {
+            "image_size":null,
+            "isImage":false,
+            "input_column": [14,15,16,17]
+        }
+    ],
+    "output_columns": [8,9,10,11,12]
+}
