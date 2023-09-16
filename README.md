@@ -4,7 +4,6 @@
 * --epochs, default=10, type=int                            # epoch 크기
 * --lr, --learning_rate, default=1e-5, type=float           # learning rate
 * --mode, default='train', type=str, choices=('train','test') # train 모드, test 모드 설정
-  
 
 # pip install
 ```
