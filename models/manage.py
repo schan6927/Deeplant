@@ -115,8 +115,6 @@ with mlflow.start_run(run_name=experiment_name) as parent_run:
         elif algorithm == 'regression':
              model, train_acc, val_acc, train_loss, val_loss, r2_score, train_mae, val_mae = train.regression(model, params_train)
 
-        model = train.fit(model,params_train)
-
 
     model.cpu()
     del model
