@@ -1,11 +1,14 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+import timm
+from torchvision.models.feature_extraction import create_feature_extractor
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 class LastModule(nn.Module):
     def __init__(self):
         super().__init__()
-        input_shape = 768
+        input_shape = 798
         output_shape = 5
         self.fc1 = nn.Linear(input_shape, input_shape*2, bias=True)
         self.fc2 = nn.Linear(input_shape*2, output_shape, bias=True)
@@ -17,6 +20,7 @@ class LastModule(nn.Module):
 
 class num_model(nn.module):
     def __init__(self):
+        super().__init__()
         input_shape = 4
         output_shape = 30
         self.fc1 = nn.Linear(input_shape, input_shape*2, bias=True)
@@ -39,8 +43,8 @@ class test_model(nn.Module):
         feature_extractor = create_feature_extractor(temp_model, return_nodes = features)
         numeric_model = num_model()
 
-        models.append(feature_extractor)
-        models.append(num_model)
+        self.models.append(feature_extractor)
+        self.models.append(num_model)
 
         self.lastfc_layer =  LastModule()
 
@@ -62,7 +66,7 @@ class test_model(nn.Module):
             
         return output
 
-    def algorithm(self):
+    def getAlgorithm(self):
         return self.algorithm
 
 def create_model():

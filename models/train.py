@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 import sklearn
+from torch import nn
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -144,7 +145,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
 
 def regression(model, params):
     num_epochs=params['num_epochs']
-    loss_func=params['loss_func']
+    loss_func=nn.MSELoss()
     optimizer=params['optimizer']
     scheduler=params['lr_scheduler']
     log_epoch=params['log_epoch']

@@ -15,8 +15,8 @@ from torch import nn
 
 import train
 import test
-import .models.make_model as m
-import dataset as dataset
+import models.make_model as m
+import models.dataset as dataset
 import utils as utils
 import argparse
 import json
@@ -72,7 +72,6 @@ test_dataset = dataset.CreateImageDataset(test_set, trainpath, model_cfgs['datas
 #Define hyperparameters
 epochs = args.epochs
 lr = args.lr
-log_epoch = args.log_epoch
 experiment_name = args.name
 run_name = args.run
 
@@ -110,7 +109,7 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'columns_name':columns_name
         }
         
-        algorithm = model.algorithm()
+        algorithm = model.getAlgorithm()
         
         if algorithm == 'classification':
              model, train_acc, val_acc, train_loss, val_loss = train.classification(model, params_train)

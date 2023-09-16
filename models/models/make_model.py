@@ -15,7 +15,7 @@ def create_model(model_cfgs):
             temp_model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
         else:
             temp_module = importlib.import_module(module)
-            temp_model = temp_module.create_model(model_name)
+            temp_model = temp_module.create_model()
     else:
         temp_model = torch.load(model_name)
 
