@@ -3,21 +3,17 @@ import mlflow
 import os
 import gc
 import pandas as pd
-import numpy as np
 
 from torch.utils.data import DataLoader
-from torchvision import transforms
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from sklearn.model_selection import train_test_split
 
 from torch import optim
-from torch import nn
 
 import train
 import test
 import models.make_model as m
 import models.dataset as dataset
-import utils as utils
 import argparse
 import json
 
