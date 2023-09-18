@@ -1,7 +1,7 @@
 
 {
     "models":{
-        "module":"vit448_grade",
+        "module":"models.vit448_grade",
         "model_name":null,
         "islogged":null,
         "num_classes":null,

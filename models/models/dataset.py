@@ -3,8 +3,6 @@ import os
 from torchvision import transforms
 from PIL import Image
 from torch.utils.data import Dataset
-import graph as g
-import math
 
 class CreateImageDataset(Dataset):
     def __init__(self, labels, img_dir, dataset_cfgs, output_columns, train=True):

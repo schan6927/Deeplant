@@ -1,7 +1,7 @@
 import torch
 import mlflow
 from tqdm import tqdm
-import CM as cm
+import models.utils.confusion_matrix as cm
 import numpy as np
 import pandas as pd
 import os
@@ -135,8 +135,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, fold, sanity_check
         new_pred = np.concatenate(conf_pred)
         new_label = np.concatenate(conf_label)
         con_mat=sklearn.metrics.confusion_matrix(new_label, new_pred)
-        CM=cm.SaveCM(con_mat,epoch)
-        CM.save_plot(fold)
+        cm.save_plot(con_mat, fold, epoch)
 
     loss = running_loss / len_data
     metric = running_metrics / len_data

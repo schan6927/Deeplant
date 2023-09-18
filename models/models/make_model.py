@@ -9,7 +9,9 @@ def create_model(model_cfgs):
     module = model_cfg['module']
     model_name = model_cfg["model_name"]
     islogged = model_cfg['islogged']
-
+    pretrained = model_cfg["pretrained"]
+    num_classes = model_cfg["num_classes"]
+    
     if not islogged:
         if module == 'timm':
             temp_model = timm.create_model(model_name, pretrained=pretrained, num_classes=num_classes)
@@ -19,5 +21,4 @@ def create_model(model_cfgs):
     else:
         temp_model = torch.load(model_name)
 
-    return temp_model
-    
+    return temp_model                  
