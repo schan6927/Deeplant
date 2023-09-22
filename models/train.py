@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import os
 from torch import nn
+import metric as f
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -59,28 +60,25 @@ def classification(model, params):
 # calculate the loss per epochs
 def classification_epoch(model, loss_func, dataset_dl, epoch, columns_name, sanity_check=False, opt=None):
     running_loss = 0.0
-    running_metrics = 0.0
     len_data = len(dataset_dl.sampler)
 
     incorrect_output = analyze.IncorrectOutput(columns_name)
     confusion_matrix = analyze.ConfusionMatrix()
+    accuracy = f.Accuracy(len_data)
 
     for xb, yb, name_b in tqdm(dataset_dl):
-        xb = xb.to(device)
+        xb = xb[0].to(device)
         yb = yb.to(device)
         output = model(xb)
         loss_b = loss_func(output, yb)
 
-        #----------calculate metric---------------
-        scores, pred_b = torch.max(output.data,1)
-        metric_b = (pred_b == yb).sum().item()
-        #-----------------------------------------
+        accuracy.update(output, yb)
     
         # L1 regularization =0.001
         lambda1= 0.0000003
         l1_regularization =0.0
         for param in model.parameters():
-            l1_regularization +=torch.norm(param,1)
+            l1_regularization += torch.norm(param,1)
         l1_regularization = lambda1 * l1_regularization
         
         running_loss += loss_b.item() + l1_regularization.item()
@@ -93,11 +91,8 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, columns_name, sani
     
         # Validation
         if opt is None:
-            confusion_matrix.updateConfusionMatrix(pred_b, yb)
-            incorrect_output.updateIncorrectOutput(pred_b, yb, name_b, scores, output)
-
-        if metric_b is not None:
-            running_metrics += metric_b
+            confusion_matrix.updateConfusionMatrix(output, yb)
+            incorrect_output.updateIncorrectOutput(output, yb, name_b)
 
         if sanity_check is True:
             break
@@ -108,7 +103,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, columns_name, sani
         incorrect_output.saveIncorrectOutput(filename="incorrect_output.csv", epoch=epoch)
 
     loss = running_loss / len_data
-    metric = running_metrics / len_data
+    metric = accuracy.getResult()
     return loss, metric
 
 

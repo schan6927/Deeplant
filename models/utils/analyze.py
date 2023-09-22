@@ -20,8 +20,9 @@ class IncorrectOutput():
         self.df = pd.DataFrame(columns=columns)
         #----------------------------------------------------------
 
-    def updateIncorrectOutput(self, pred_b, yb, name_b, scores, output):
-        # 틀린 이미지 csv로 저장하는 부분. 현재 소 데이터에만 적용 가능.
+    def updateIncorrectOutput(self, output, yb, name_b):
+
+        scores, pred_b = torch.max(output.data,1)
         index = torch.nonzero((pred_b != yb)).squeeze().cpu().tolist()
         if not isinstance(index, list):
             index = [index]  # index가 단일 값인 경우에 리스트로 변환하여 처리
@@ -57,7 +58,8 @@ class ConfusionMatrix():
         self.conf_label = []
 
 
-    def updateConfusionMatrix(self, pred_b, yb):
+    def updateConfusionMatrix(self, output, yb):
+        _, pred_b = torch.max(output.data,1)
         predictions_conv = pred_b.cpu().numpy()
         labels_conv = yb.cpu().numpy()
         self.conf_pred.append(predictions_conv)
