@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 from torch import optim
 
 import train
-import test
 import models.make_model as m
 import models.dataset as dataset
 import argparse
@@ -20,7 +19,7 @@ import json
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 #-----------------------------Hard coding section-will be changed to config file----------------------------------
-num_workers = 4
+num_workers = 3
 batch_size = 16
 log_epoch=10
 factor =0.5
@@ -35,14 +34,14 @@ parser=argparse.ArgumentParser(description='training pipeline for image classifi
 
 parser.add_argument('--run', default ='proto', type=str)  # run 이름 설정
 parser.add_argument('--name', default ='proto', type=str)  # experiment 이름 설정
-parser.add_argument('--model_cfgs', default='model_cfgs.json', type=str)  # 
+parser.add_argument('--model_cfgs', default='configs/model_cfgs.json', type=str)  # 
 parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드
 parser.add_argument('--epochs', default=10, type=int)  #epochs
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
 parser.add_argument('--data_path', default='/home/work/deeplant_data', type=str)  # data path
 args=parser.parse_args()
 
-#-----------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------
 
 #Define data pathes
 datapath = args.data_path
@@ -61,6 +60,7 @@ with open(args.model_cfgs, 'r') as json_file:
 
 output_columns = model_cfgs['output_columns']
 columns_name = label_set.columns[output_columns].values
+print(columns_name)
 
 #Define Data loader
 train_dataset = dataset.CreateImageDataset(train_set, trainpath, model_cfgs['datasets'], output_columns, train=True)

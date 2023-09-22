@@ -14,7 +14,7 @@ class IncorrectOutput():
         # 여기 바꾸면 아래 validation 저장하는 부분도 바꿔야함.
         self.columns_name = columns_name
         columns = ['file_name']
-        for i in range(columns_name):
+        for i in range(len(columns_name)):
             columns.append(columns_name[i])
         columns.append("predict")
         self.df = pd.DataFrame(columns=columns)
@@ -30,7 +30,6 @@ class IncorrectOutput():
         scores = scores.cpu().numpy()
         output = list(output.detach().cpu().numpy())
         name_b = list(name_b)
-
         for i in index:
             data = {'file_name':name_b[i]}
             # class 개수 1개면 문제 생겨서 나눔.
@@ -42,7 +41,7 @@ class IncorrectOutput():
             data['score'] = scores[i]
             data['predict'] = pred_b[i]
             new_row = pd.DataFrame(data=data, index=['file_name'])
-            df = pd.concat([df,new_row], ignore_index=True)
+            self.df = pd.concat([self.df,new_row], ignore_index=True)
 
     def saveIncorrectOutput(self, filename, epoch):
         if not os.path.exists('temp'):

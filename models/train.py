@@ -1,7 +1,7 @@
 import torch
 import mlflow
 from tqdm import tqdm
-import models.utils.analyze as analyze
+import utils.analyze as analyze
 import numpy as np
 import pandas as pd
 import os
@@ -35,7 +35,7 @@ def classification(model, params):
         #validation
         model.eval()
         with torch.no_grad():
-            loss, metric= classification_epoch(model, loss_func, val_dl, columns_name, epoch)
+            loss, metric= classification_epoch(model, loss_func, val_dl, epoch, columns_name)
         mlflow.log_metric("val loss", loss, epoch)
         mlflow.log_metric("val accuracy", metric, epoch)
         val_loss.append(loss)
@@ -62,13 +62,14 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, columns_name, sani
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
 
-    incorrect_output = analyze.IncorrectOutput(columns_name)
+    incorrect_output = analyze.IncorrectOutput(columns_name=["1++","1+","1","2","3"])
     confusion_matrix = analyze.ConfusionMatrix()
     accuracy = f.Accuracy(len_data)
 
     for xb, yb, name_b in tqdm(dataset_dl):
-        xb = xb[0].to(device)
-        yb = yb.to(device)
+        xb = xb
+        yb = yb.to(device).long()
+        yb = yb[:,0]
         output = model(xb)
         loss_b = loss_func(output, yb)
 
