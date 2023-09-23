@@ -27,7 +27,7 @@ threshold=0.03
 momentum =0.9
 weight_decay =5e-4
 seed=42
-eval_function=["MSE","R2SCORE","MAE"]
+eval_function=["ACC","R2S","MAE"]
 #-----------------------------------------------------------------------------------------------------------------
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
@@ -103,7 +103,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'lr_scheduler':scheduler,
         'log_epoch':log_epoch,
         'num_classes':len(model_cfgs['output_columns']),
-        'columns_name':columns_name
+        'columns_name':columns_name,
+        'eval_function':eval_function
         }
         
         algorithm = model.getAlgorithm()
