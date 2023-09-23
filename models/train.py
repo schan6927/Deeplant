@@ -21,38 +21,25 @@ def classification(model, params):
     eval_function=params['eval_function']
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
-    best_acc = 0
     for epoch in tqdm(range(num_epochs)):
 
         #training
         model.train()
-        loss, metric= classification_epoch(model, loss_func, train_dl, epoch, columns_name, optimizer)
-        mlflow.log_metric("train loss", loss, epoch)
-        mlflow.log_metric("train accuracy", metric, epoch)
-        train_loss.append(loss)
-        train_metric.append(metric)
+        train_loss, train_metrics= classification_epoch(model, loss_func, train_dl, epoch, columns_name, optimizer)
 
         #validation
         model.eval()
         with torch.no_grad():
-            loss, metric= classification_epoch(model, loss_func, val_dl, epoch, columns_name)
-        mlflow.log_metric("val loss", loss, epoch)
-        mlflow.log_metric("val accuracy", metric, epoch)
-        val_loss.append(loss)
-        val_metric.append(metric)
+            val_loss, val_metrics= classification_epoch(model, loss_func, val_dl, epoch, columns_name)
         scheduler.step(val_loss[-1])
 
-        if epoch % log_epoch == log_epoch-1:
-            mlflow.pytorch.log_model(model, f'epoch_{epoch}')
-            
-        #saving best model
-        if val_metric[-1] > best_acc:
-            best_acc = val_metric[-1]
-            mlflow.set_tag("best", f'best at epoch {epoch}')
-            mlflow.pytorch.log_model(model, f"best")
-        print('The Validation Loss is {} and the validation accuracy is {}'.format(val_loss[-1],val_metric[-1]))
-        print('The Training Loss is {} and the training accuracy is {}'.format(train_loss[-1],train_metric[-1]))
 
+        mlflow.log_metric("train loss", train_loss, epoch)
+        mlflow.log_metric("val loss", val_loss, epoch)
+        train_metrics.logMetrics(epoch)
+        val_metrics.logMetrics(epoch)
+        printResults(train_loss, train_metrics, val_loss, val_metrics)
+        best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
     return model, train_metric, val_metric, train_loss, val_loss
 
@@ -65,7 +52,6 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, san
     incorrect_output = analyze.IncorrectOutput(columns_name=["1++","1+","1","2","3"])
     confusion_matrix = analyze.ConfusionMatrix()
     accuracy = f.Accuracy(len_data, 1, "classification")
-    metrics = f.initMetrics(eval_function)
 
     for xb, yb, name_b in tqdm(dataset_dl):
         yb = yb.to(device).long()
@@ -128,38 +114,18 @@ def regression(model, params):
         model.train()
         train_loss, train_metrics = regression_epoch(model, loss_func, train_dl, epoch, num_classes, columns_name, eval_function, optimizer)
         
-        mlflow.log_metric("train loss", train_loss, epoch)
-        for metric in train_metrics.getMetrics():
-            class_name = metric.getClassName()
-            result = metric.getResult()      
-            for i in range(num_classes):
-                mlflow.log_metric(f"train {class_name} {columns_name[i]}", result[i], epoch)
-
         #validation
         model.eval()
         with torch.no_grad():
             val_loss, val_metrics = regression_epoch(model, loss_func, val_dl, epoch, num_classes, columns_name, eval_function)
-
-        mlflow.log_metric("val loss", val_loss, epoch)
-        for metric in val_metrics.getMetrics():
-            class_name = metric.getClassName()
-            result = metric.getResult()      
-            for i in range(num_classes):
-                mlflow.log_metric(f"val {class_name} {columns_name[i]}", result[i], epoch)
-
         scheduler.step(val_loss)
-
-        if epoch % log_epoch == log_epoch-1:
-            mlflow.pytorch.log_model(model, f'model_epoch_{epoch}')
-        #saving best model
-        if val_loss<best_loss or best_loss<0.0:
-            best_loss = val_loss
-            mlflow.set_tag("best", f'best at epoch {epoch}')
-            mlflow.pytorch.log_model(model, f"best")
-
-        print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
-        for train_metric, val_metric in train_metrics.getMetrics(), val_metrics.getMetrics():
-            print(f'The Training {train_metric.getClassName()} is {train_metric.getResult()} and the Validation {val_metric.getClassName()} is {val_metric.getResult()}')
+        
+        mlflow.log_metric("train loss", train_loss, epoch)
+        mlflow.log_metric("val loss", val_loss, epoch)
+        train_metrics.logMetrics(epoch)
+        val_metrics.logMetrics(epoch)
+        printResults(train_loss, train_metrics, val_loss, val_metrics)
+        best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
     return model, train_acc, val_acc, train_loss, val_loss, r2_list, train_mae, val_mae
 
@@ -199,3 +165,18 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
     return loss, metrics
 
 
+def printResults(train_loss, train_metrics, val_loss, val_metrics):
+    print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
+    for train_metric, val_metric in train_metrics.getMetrics(), val_metrics.getMetrics():
+        print(f'The Training {train_metric.getClassName()} is {train_metric.getResult()} and the Validation {val_metric.getClassName()} is {val_metric.getResult()}')
+
+
+def saveModel(model, epoch, log_epoch, val_loss, best_loss):
+    if epoch % log_epoch == log_epoch-1:
+        mlflow.pytorch.log_model(model, f'model_epoch_{epoch}')
+    #saving best model
+    if val_loss<best_loss or best_loss<0.0:
+        best_loss = val_loss
+        mlflow.set_tag("best", f'best at epoch {epoch}')
+        mlflow.pytorch.log_model(model, f"best")
+    return best_loss

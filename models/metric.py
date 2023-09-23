@@ -1,13 +1,15 @@
 from torch import nn
 import torch
 import numpy as np
+import mlflow
 
 class Accuracy():
-    def __init__(self, length, num_classes, mode):
+    def __init__(self, length, num_classes, mode, columns_name):
         
         self.num_classes = num_classes
         self.length = length
         self.mode = mode
+        self.columns_name = columns_name
 
         self.cumulative_metric = np.zeros(num_classes)
 
@@ -27,8 +29,12 @@ class Accuracy():
     def getResult(self):
         return self.cumulative_metric / self.length
     
-    def getClassName():
+    def getClassName(self):
         return "Accuracy"
+    
+    def logMetric(self, epoch):  
+        for i in range(self.num_classes):
+            mlflow.log_metric(f"val Accuracy {self.columns_name[i]}", self.getResult(), epoch)
     
 
 class R2score():
@@ -57,16 +63,20 @@ class R2score():
         r2_score = (1 - (ssr / sst)).mean()
         return r2_score
     
-    def getClassName():
+    def getClassName(self):
         return "R2score"
+    
+    def logMetric(self, epoch):  
+        mlflow.log_metric(f"val R2score", self.getResult(), epoch)
     
 
 
 class MeanAbsError():
-    def __init__(self, length, num_classes):
+    def __init__(self, length, num_classes, columns_name):
         self.num_classes = num_classes
         self.cumulative_metric = np.zeros(num_classes)
         self.length = length
+        self.columns_name = columns_name
     
     def update(self, output, yb):
         if self.num_classes != 1:
@@ -78,8 +88,12 @@ class MeanAbsError():
     def getResult(self):
         return self.cumulative_metric / self.length
     
-    def getClassName():
+    def getClassName(self):
         return "MAE"
+    
+    def logMetric(self, epoch):  
+        for i in range(self.num_classes):
+            mlflow.log_metric(f"val MAE {self.columns_name[i]}", self.getResult(), epoch)
 
 
 class Metrics():
@@ -99,6 +113,10 @@ class Metrics():
         
     def getMetrics(self):
         return self.metrics
+    
+    def logMetrics(self,epoch):
+        for metric in self.metrics:
+            metric.logMetric(epoch)
 
 
 
