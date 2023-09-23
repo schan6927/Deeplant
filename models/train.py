@@ -134,7 +134,7 @@ def regression(model, params):
 def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name, eval_function, opt=None):
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
-    metrics = f.Metrics(eval_function, num_classes, 'regression', len_data)
+    metrics = f.Metrics(eval_function, num_classes, 'regression', len_data, columns_name)
     output_log = analyze_r.OutputLog(columns_name, num_classes)
 
     for xb, yb, name_b in tqdm(dataset_dl):

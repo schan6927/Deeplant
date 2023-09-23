@@ -97,15 +97,15 @@ class MeanAbsError():
 
 
 class Metrics():
-    def __init__(self,eval_function, num_classes, mode, data_length):
+    def __init__(self,eval_function, num_classes, mode, data_length, columns_name):
         self.metrics = []
         for f in eval_function:
             if f == 'ACC':
-                self.metrics.append(Accuracy(data_length, num_classes, mode))
+                self.metrics.append(Accuracy(data_length, num_classes, mode, columns_name))
             elif f == 'R2S':
                 self.metrics.append(R2score(data_length))
             elif f == 'MAE':
-                self.metrics.append(MeanAbsError(data_length, num_classes))
+                self.metrics.append(MeanAbsError(data_length, num_classes, columns_name))
 
     def update(self, output, yb):
         for metric in self.metrics:
