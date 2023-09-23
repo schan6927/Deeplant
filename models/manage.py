@@ -27,7 +27,7 @@ threshold=0.03
 momentum =0.9
 weight_decay =5e-4
 seed=42
-eval_function=["ACC","R2S","MAE"]
+eval_function=["MAE","ACC"]
 #-----------------------------------------------------------------------------------------------------------------
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')

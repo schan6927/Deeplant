@@ -36,8 +36,8 @@ def classification(model, params):
 
         mlflow.log_metric("train loss", train_loss, epoch)
         mlflow.log_metric("val loss", val_loss, epoch)
-        train_metrics.logMetrics(epoch)
-        val_metrics.logMetrics(epoch)
+        train_metrics.logMetrics("train", epoch)
+        val_metrics.logMetrics("val", epoch)
         printResults(train_loss, train_metrics, val_loss, val_metrics)
         best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
@@ -122,8 +122,8 @@ def regression(model, params):
         
         mlflow.log_metric("train loss", train_loss, epoch)
         mlflow.log_metric("val loss", val_loss, epoch)
-        train_metrics.logMetrics(epoch)
-        val_metrics.logMetrics(epoch)
+        train_metrics.logMetrics("train", epoch)
+        val_metrics.logMetrics("val", epoch)
         printResults(train_loss, train_metrics, val_loss, val_metrics)
         best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
@@ -167,7 +167,7 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
 
 def printResults(train_loss, train_metrics, val_loss, val_metrics):
     print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
-    for train_metric, val_metric in train_metrics.getMetrics(), val_metrics.getMetrics():
+    for train_metric, val_metric in zip(train_metrics.getMetrics(), val_metrics.getMetrics()):
         print(f'The Training {train_metric.getClassName()} is {train_metric.getResult()} and the Validation {val_metric.getClassName()} is {val_metric.getResult()}')
 
 
