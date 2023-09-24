@@ -1,7 +1,7 @@
 
 {
     "models":{
-        "module":"models.vit448_grade",
+        "module":"models.vit_cnn",
         "model_name":null,
         "islogged":null,
         "num_classes":null,
@@ -11,12 +11,14 @@
         {
             "image_size":448,
             "isImage":true,
-            "input_column": 13
+            "input_column": 13,
+            "graph":null
         },
         {
-            "image_size":null,
+            "image_size":448,
             "isImage":false,
-            "input_column": [14,15,16,17]
+            "input_column": null,
+            "graph":"gcolor"
         }
     ],
     "output_columns": [8,9,10,11,12]

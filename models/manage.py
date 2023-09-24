@@ -19,7 +19,7 @@ import json
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 #-----------------------------Hard coding section-will be changed to config file----------------------------------
-num_workers = 3
+num_workers = 4
 batch_size = 16
 log_epoch=10
 factor =0.5
@@ -27,7 +27,8 @@ threshold=0.03
 momentum =0.9
 weight_decay =5e-4
 seed=42
-eval_function=["MAE","ACC"]
+save_model=False
+eval_function=["MAE","ACC", "R2S"]
 #-----------------------------------------------------------------------------------------------------------------
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
@@ -45,7 +46,6 @@ args=parser.parse_args()
 
 #Define data pathes
 datapath = args.data_path
-trainpath = os.path.join(datapath,'train/cropped_448')
 label_set = pd.read_csv(os.path.join(datapath,'new_train.csv'))
 
 train_set, test_set = train_test_split(label_set, test_size =0.1, random_state = seed)
@@ -63,8 +63,8 @@ columns_name = label_set.columns[output_columns].values
 print(columns_name)
 
 #Define Data loader
-train_dataset = dataset.CreateImageDataset(train_set, trainpath, model_cfgs['datasets'], output_columns, train=True)
-test_dataset = dataset.CreateImageDataset(test_set, trainpath, model_cfgs['datasets'], output_columns, train=False)
+train_dataset = dataset.CreateImageDataset(train_set, datapath, model_cfgs['datasets'], output_columns, train=True)
+test_dataset = dataset.CreateImageDataset(test_set, datapath, model_cfgs['datasets'], output_columns, train=False)
 
 #Define hyperparameters
 epochs = args.epochs
@@ -104,7 +104,8 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'log_epoch':log_epoch,
         'num_classes':len(model_cfgs['output_columns']),
         'columns_name':columns_name,
-        'eval_function':eval_function
+        'eval_function':eval_function,
+        'save_model':save_model
         }
         
         algorithm = model.getAlgorithm()

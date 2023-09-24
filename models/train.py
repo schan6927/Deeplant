@@ -39,7 +39,9 @@ def classification(model, params):
         train_metrics.logMetrics("train", epoch)
         val_metrics.logMetrics("val", epoch)
         printResults(train_loss, train_metrics, val_loss, val_metrics)
-        best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
+        
+        if save_model is True:
+            best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
     return model, train_metric, val_metric, train_loss, val_loss
 
@@ -105,6 +107,7 @@ def regression(model, params):
     num_classes=params['num_classes']
     columns_name=params['columns_name']
     eval_function=params['eval_function']
+    save_model=params['save_model']
 
     train_loss, val_loss, train_acc, val_acc, r2_list, train_mae, val_mae =[], [], [], [], [], [], []
     best_loss = -1.0
@@ -125,7 +128,9 @@ def regression(model, params):
         train_metrics.logMetrics("train", epoch)
         val_metrics.logMetrics("val", epoch)
         printResults(train_loss, train_metrics, val_loss, val_metrics)
-        best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
+        
+        if save_model is True:
+            best_loss = saveModel(model, epoch, log_epoch, val_loss, best_loss)
 
     return model, train_acc, val_acc, train_loss, val_loss, r2_list, train_mae, val_mae
 

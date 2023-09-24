@@ -12,6 +12,7 @@ class CreateImageDataset(Dataset):
         self.image_sizes = []
         self.isImage = []
         self.input_columns = []
+        self.graph = []
         self.output_columns = output_columns
         self.model_cnt = len(dataset_cfgs)
 
@@ -19,6 +20,8 @@ class CreateImageDataset(Dataset):
             image_size = dataset_cfg['image_size']
             isImage = dataset_cfg['isImage']
             input_column = dataset_cfg['input_column']
+            graph = dataset_cfg['graph']
+            
             
             train_transform = transforms.Compose([
             transforms.Resize([image_size,image_size]),
@@ -37,6 +40,7 @@ class CreateImageDataset(Dataset):
             self.test_transforms.append(test_transform)
             self.image_sizes.append(image_size)
             self.isImage.append(isImage)
+            self.graph.append(graph)
             self.input_columns.append(input_column)
 
         self.img_dir = img_dir
@@ -60,12 +64,36 @@ class CreateImageDataset(Dataset):
                 else:
                     image = self.test_transforms[i](image)
                 inputs.append(image)
+                
+            elif self.graph is not None:
+                grade = self.img_labels.iloc[idx]['Rank']
+                graph = self.openGraph(self.graph[i], grade)
+                graph = self.test_transforms[i](graph)
+                inputs.append(graph[0:3])
 
             else:
                 input = torch.tensor(self.img_labels.iloc[idx, self.input_columns[i]], dtype=torch.float32)
                 inputs.append(input) 
 
         return inputs, outputs, name
+    
+    
+    
+    def openGraph(self, graph, grade):
+        if graph == 'gcolor':
+            temp = Image.open(f'utils/kde/kde_Color_{grade}.png')
+        elif graph == 'gsurface':
+            temp = Image.open(f'utils/kde/kde_Surface Moisture_{grade}.png')
+        elif graph == 'gtexture':
+            temp = Image.open(f'utils/kde/kde_Texture_{grade}.png')
+        elif graph == 'gmarbling':
+            temp = Image.open(f'utils/kde/kde_Marbling_{grade}.png')
+        elif graph == 'gtotal':
+            temp = Image.open(f'utils/kde/kde_Total_{grade}.png')
+        else:
+            print('invalid graph name')
+        return temp
+
     
     # def add_graph(self, image, transform, grade, img_path):
     #     add_graphs = []
