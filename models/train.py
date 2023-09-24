@@ -1,7 +1,7 @@
 import torch
 import mlflow
 from tqdm import tqdm
-import models.utils.analyze as analyze
+import utils.analyze as analyze
 import numpy as np
 import pandas as pd
 import os
