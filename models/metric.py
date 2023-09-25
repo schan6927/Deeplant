@@ -30,7 +30,7 @@ class Accuracy():
         return self.cumulative_metric / self.length
     
     def getClassName(self):
-        return "Accuracy"
+        return "accuracy"
     
     def logMetric(self, mode, epoch):  
         result = self.getResult()
@@ -65,7 +65,7 @@ class R2score():
         return r2_score
     
     def getClassName(self):
-        return "R2score"
+        return "r2score"
     
     def logMetric(self, mode, epoch):  
         mlflow.log_metric(f"{mode} R2score", self.getResult(), epoch)
@@ -90,7 +90,7 @@ class MeanAbsError():
         return self.cumulative_metric / self.length
     
     def getClassName(self):
-        return "MAE"
+        return "mae"
     
     def logMetric(self, mode, epoch):
         result = self.getResult()
