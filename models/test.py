@@ -9,8 +9,18 @@ import sklearn
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-
 def classification(model, params):
+    """
+    
+
+    모델을 평가모드로 전환시킨 후, (loss, metric, df)를 classification_epoch()를 통해 구한다.
+    그 후, loss 와 metric을 각각 test_loss 와 test_metric에 추가해준 후, test_loss 와 test_metric 을 반환한다. 
+
+    (
+    model
+    ,params:
+    )
+    """
     num_epochs=params['num_epochs']
     test_dl=params['test_dl']
     sanity=params['sanity_check']
@@ -36,6 +46,21 @@ def classification(model, params):
         return model, test_metric, test_loss
 
 def classification_epoch(model, loss_func, dataset_dl, epoch, sanity_check=False, df=None):
+    """
+    
+
+
+
+    (
+    model:
+    ,loss_func:
+    ,dataset_dl:
+    ,epoch:
+    ,sanity_check:
+    ,df:
+    )
+    """
+    
     running_loss = 0.0
     running_metrics = 0.0
     len_data = len(dataset_dl.sampler)
