@@ -124,7 +124,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, sanity_check=False
 
 def regression(model, params):
     """    
-    모델을 평가모드로 전환시킨 후, (loss, metric, df)를 classification_epoch()를 통해 구한다.
+    모델을 평가모드로 전환시킨 후, (loss, metric, df)를 regression_epoch()를 통해 구한다.
     그 후, loss 와 metric을 각각 test_loss 와 test_metric에 추가해준 후, test_loss 와 test_metric 을 반환한다. 
     
     (
