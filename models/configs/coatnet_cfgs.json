@@ -1,7 +1,7 @@
 
 {
     "models":{
-        "module":"models.vit_cnn",
+        "module":"models.coatnet",
         "model_name":null,
         "islogged":null,
         "num_classes":null,
@@ -9,17 +9,11 @@
     },
     "datasets":[
         {
-            "image_size":448,
+            "image_size":224,
             "isImage":true,
             "input_column": 13,
             "graph":null
-        },
-        {
-            "image_size":448,
-            "isImage":false,
-            "input_column": null,
-            "graph":"gsurface"
         }
     ],
-    "output_columns": [8,18,10,11,12]
+    "output_columns": [8,9,10,11,12]
 }

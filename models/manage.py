@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 from torch import optim
 
 import train
-import test
 import models.make_model as m
 import models.dataset as dataset
 import argparse
@@ -28,24 +27,25 @@ threshold=0.03
 momentum =0.9
 weight_decay =5e-4
 seed=42
+save_model=False
+eval_function=["MAE","ACC", "R2S"]
 #-----------------------------------------------------------------------------------------------------------------
 
 parser=argparse.ArgumentParser(description='training pipeline for image classification')
 
 parser.add_argument('--run', default ='proto', type=str)  # run 이름 설정
 parser.add_argument('--name', default ='proto', type=str)  # experiment 이름 설정
-parser.add_argument('--model_cfgs', default='model_cfgs.json', type=str)  # 
+parser.add_argument('--model_cfgs', default='configs/model_cfgs.json', type=str)  # 
 parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드
 parser.add_argument('--epochs', default=10, type=int)  #epochs
 parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
 parser.add_argument('--data_path', default='/home/work/deeplant_data', type=str)  # data path
 args=parser.parse_args()
 
-#-----------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------
 
 #Define data pathes
 datapath = args.data_path
-trainpath = os.path.join(datapath,'train/cropped_448')
 label_set = pd.read_csv(os.path.join(datapath,'new_train.csv'))
 
 train_set, test_set = train_test_split(label_set, test_size =0.1, random_state = seed)
@@ -60,10 +60,11 @@ with open(args.model_cfgs, 'r') as json_file:
 
 output_columns = model_cfgs['output_columns']
 columns_name = label_set.columns[output_columns].values
+print(columns_name)
 
 #Define Data loader
-train_dataset = dataset.CreateImageDataset(train_set, trainpath, model_cfgs['datasets'], output_columns, train=True)
-test_dataset = dataset.CreateImageDataset(test_set, trainpath, model_cfgs['datasets'], output_columns, train=False)
+train_dataset = dataset.CreateImageDataset(train_set, datapath, model_cfgs['datasets'], output_columns, train=True)
+test_dataset = dataset.CreateImageDataset(test_set, datapath, model_cfgs['datasets'], output_columns, train=False)
 
 #Define hyperparameters
 epochs = args.epochs
@@ -102,7 +103,9 @@ with mlflow.start_run(run_name=run_name) as parent_run:
         'lr_scheduler':scheduler,
         'log_epoch':log_epoch,
         'num_classes':len(model_cfgs['output_columns']),
-        'columns_name':columns_name
+        'columns_name':columns_name,
+        'eval_function':eval_function,
+        'save_model':save_model
         }
         
         algorithm = model.getAlgorithm()

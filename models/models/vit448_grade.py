@@ -18,7 +18,7 @@ class LastModule(nn.Module):
         x = self.fc2(x)
         return x
 
-class num_model(nn.module):
+class num_model(nn.Module):
     def __init__(self):
         super().__init__()
         input_shape = 4
