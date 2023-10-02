@@ -1,9 +1,14 @@
+# Deeplant
+딥러닝을 이용한 육류 이미지 분석.
+
 ## Argument
-* --data_path, default='/home/work/resized_image_datas/image_5class_5000/224/', type=str  # data path
-* --name, default='proto' type=str                          # Overall name for mlflow
-* --epochs, default=10, type=int                            # epoch 크기
-* --lr, --learning_rate, default=1e-5, type=float           # learning rate
-* --mode, default='train', type=str, choices=('train','test') # train 모드, test 모드 설정
+* parser.add_argument('--run', default ='proto', type=str)  # run 이름 설정
+* parser.add_argument('--name', default ='proto', type=str)  # experiment 이름 설정
+* parser.add_argument('--model_cfgs', default='configs/model_cfgs.json', type=str)  # model 관련 config 파일 경로 설정
+* parser.add_argument('--mode', default='train', type=str, choices=('train', 'test')) # 학습모드 / 평가모드. (현재 train만 가능.)
+* parser.add_argument('--epochs', default=10, type=int)  #epochs
+* parser.add_argument('--lr', '--learning_rate', default=1e-5, type=float)  # learning rate
+* parser.add_argument('--data_path', default='/home/work/deeplant_data', type=str)  # data path
 
 # pip install
 ```
@@ -14,14 +19,6 @@ pip install transformers datsets accelerate nvidia-ml-py3
 ```
 
 # 예시 실행 코드
-## vit
 ```
-python manage.py --model_type 'vit' --model_name 'vit_base_patch16_224.augreg2_in21k_ft_in1k' --image_size 224 --epochs 10 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
-```
-```
-python manage.py --model_type 'vit' --model_name 'vit_base_patch32_clip_448.laion2b_ft_in12k_in1k' --image_size 448 --epochs 30 --batch_size 16 --log_epoch 10 --data_path '/home/work/deeplant_data/' --algorithm 'regression' --columns 4 5 6 7 8 --num_classes 5 --index 9 --run_name 'dp5-vit-448-16-32'  
-```
-## cnn
-```
-python manage.py --run_name 'efficientnet-448-16' --model_type 'cnn' --model_name 'tf_efficientnetv2_l.in21k_ft_in1k' --image_size 448 --epochs 50 --batch_size 16 --log_epoch 10 --data_path '/home/work/original_cropped_image_dataset/image_5class_6000/448/' 
+python manage.py --model_type 'vit'
 ```
