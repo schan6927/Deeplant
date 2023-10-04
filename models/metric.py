@@ -1,3 +1,7 @@
+"""
+결과값을 저장하게 하는 파일
+"""
+
 from torch import nn
 import torch
 import numpy as np
