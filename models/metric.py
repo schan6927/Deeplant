@@ -35,7 +35,7 @@ class Accuracy():
     def logMetric(self, mode, epoch):  
         result = self.getResult()
         for i in range(self.num_classes):
-            mlflow.log_metric(f"{mode} Accuracy {self.columns_name[i]}", result[i], epoch)
+            mlflow.log_metric(f"{mode} accuracy {self.columns_name[i]}", result[i], epoch)
 
 
 class R2score():
@@ -68,7 +68,7 @@ class R2score():
         return "r2score"
     
     def logMetric(self, mode, epoch):  
-        mlflow.log_metric(f"{mode} R2score", self.getResult(), epoch)
+        mlflow.log_metric(f"{mode} r2score", self.getResult(), epoch)
 
 
 
@@ -95,7 +95,7 @@ class MeanAbsError():
     def logMetric(self, mode, epoch):
         result = self.getResult()
         for i in range(self.num_classes):
-            mlflow.log_metric(f"{mode} MAE {self.columns_name[i]}", result[i], epoch)
+            mlflow.log_metric(f"{mode} mae {self.columns_name[i]}", result[i], epoch)
 
 
 class Metrics():
