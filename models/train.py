@@ -19,18 +19,19 @@ def classification(model, params):
     val_dl=params['val_dl']
     columns_name=params['columns_name']
     eval_function=params['eval_function']
+    save_model=params['save_model']
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
     for epoch in tqdm(range(num_epochs)):
 
         #training
         model.train()
-        train_loss, train_metrics= classification_epoch(model, loss_func, train_dl, epoch, columns_name, optimizer)
+        train_loss, train_metrics= classification_epoch(model, loss_func, train_dl, epoch, eval_function, 1, columns_name, optimizer)
 
         #validation
         model.eval()
         with torch.no_grad():
-            val_loss, val_metrics= classification_epoch(model, loss_func, val_dl, epoch, columns_name)
+            val_loss, val_metrics= classification_epoch(model, loss_func, val_dl, epoch, eval_function, 1, columns_name)
         scheduler.step(val_loss[-1])
 
 
@@ -47,13 +48,13 @@ def classification(model, params):
 
 
 # calculate the loss per epochs
-def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, sanity_check=False, opt=None):
+def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, num_classes, columns_name, sanity_check=False, opt=None):
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
 
     incorrect_output = analyze.IncorrectOutput(columns_name=["1++","1+","1","2","3"])
     confusion_matrix = analyze.ConfusionMatrix()
-    accuracy = f.Accuracy(len_data, 1, "classification")
+    metrics = f.Metrics(eval_function, num_classes, 'regression', len_data, columns_name)
 
     for xb, yb, name_b in tqdm(dataset_dl):
         yb = yb.to(device).long()
@@ -61,7 +62,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, san
         output = model(xb)
         loss_b = loss_func(output, yb)
 
-        accuracy.update(output, yb)
+        metrics.update(output, yb)
     
         # L1 regularization =0.001
         lambda1= 0.0000003
@@ -92,8 +93,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, san
         incorrect_output.saveIncorrectOutput(filename="incorrect_output.csv", epoch=epoch)
 
     loss = running_loss / len_data
-    metric = accuracy.getResult()
-    return loss, metric
+    return loss, metrics
 
 
 def regression(model, params):
