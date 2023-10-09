@@ -1,0 +1,26 @@
+
+{
+    "models":{
+        "module":"models.graph_channel",
+        "model_name":null,
+        "islogged":null,
+        "num_classes":null,
+        "pretrained":null
+    },
+    "datasets":[
+        {
+            "image_size":448,
+            "isImage":true,
+            "input_column": 13,
+            "graph":null
+        },
+        {
+            "image_size":448,
+            "isImage":false,
+            "input_column": null,
+            "graph":"gsurface"
+        }
+
+    ],
+    "output_columns": [8,18,10,11,12]
+}

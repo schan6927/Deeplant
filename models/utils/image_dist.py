@@ -7,7 +7,7 @@ import mlflow
 import seaborn as sns
 
 
-def colorGraph(name):
+def drawColorGraph(name):
     
     plt.figure
     file0 = name
@@ -36,7 +36,7 @@ def colorGraph(name):
     plt.close(fig)
     return color
 
-def grayGraph(name):
+def drawGrayGraph(name):
     image_path = name
     gray_image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
 

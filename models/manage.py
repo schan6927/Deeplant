@@ -19,7 +19,7 @@ import json
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(device)
 #-----------------------------Hard coding section-will be changed to config file----------------------------------
-num_workers = 4
+num_workers = 3
 batch_size = 16
 log_epoch=10
 factor =0.5
@@ -27,7 +27,7 @@ threshold=0.03
 momentum =0.9
 weight_decay =5e-4
 seed=42
-save_model=False
+save_model=True
 eval_function=["MAE","ACC", "R2S"]
 #-----------------------------------------------------------------------------------------------------------------
 

@@ -3,6 +3,7 @@ import os
 from torchvision import transforms
 from PIL import Image
 from torch.utils.data import Dataset
+import utils.image_dist as imdi
 
 class CreateImageDataset(Dataset):
     def __init__(self, labels, img_dir, dataset_cfgs, output_columns, train=True):
@@ -66,10 +67,16 @@ class CreateImageDataset(Dataset):
                 inputs.append(image)
                 
             elif self.graph is not None:
+                graph_transform = transforms.Compose([
+                    transforms.Resize([self.image_sizes[i],self.image_sizes[i]]),
+                    transforms.Grayscale(num_output_channels=1),
+                    transforms.ToTensor(),
+                ])
+                
                 grade = self.img_labels.iloc[idx]['Rank']
-                graph = self.openGraph(self.graph[i], grade)
-                graph = self.test_transforms[i](graph)
-                inputs.append(graph[0:3])
+                graph = self.openGraph(self.graph[i], grade, idx, i)
+                graph = graph_transform(graph)
+                inputs.append(graph)
 
             else:
                 input = torch.tensor(self.img_labels.iloc[idx, self.input_columns[i]], dtype=torch.float32)
@@ -79,7 +86,7 @@ class CreateImageDataset(Dataset):
     
     
     
-    def openGraph(self, graph, grade):
+    def openGraph(self, graph, grade, idx, i):
         if graph == 'gcolor':
             temp = Image.open(f'utils/kde/kde_Color_{grade}.png')
         elif graph == 'gsurface':
@@ -90,6 +97,14 @@ class CreateImageDataset(Dataset):
             temp = Image.open(f'utils/kde/kde_Marbling_{grade}.png')
         elif graph == 'gtotal':
             temp = Image.open(f'utils/kde/kde_Total_{grade}.png')
+        elif graph == 'color':
+            name = self.img_labels.iloc[idx, self.input_columns[i]]
+            img_path = os.path.join(self.img_dir, name)
+            temp = imdi.drawColorGraph(img_path)
+        elif graph == 'gray':
+            name = self.img_labels.iloc[idx, self.input_columns[i]]
+            img_path = os.path.join(self.img_dir, name)
+            temp = imdi.drawGrayGraph(img_path)
         else:
             print('invalid graph name')
         return temp

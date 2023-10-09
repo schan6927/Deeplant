@@ -45,3 +45,6 @@ class OutputLog():
                 os.mkdir('temp')
             self.df.to_csv('temp/train_output_data.csv')
             mlflow.log_artifact('temp/train_output_data.csv', f'output_epoch_{epoch}')
+            
+    def getOutputLog(self):
+        return self.df
