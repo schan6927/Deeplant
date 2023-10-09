@@ -54,17 +54,22 @@ pip install transformers datsets accelerate nvidia-ml-py3
 
 # 결과 및 성능
 ## 등급 예측
-
+### CNN
+| Model | # Params | Accuracy |
+|---|---|---|
+### ViT
+| Model | # Params | Accuracy |
+|---|---|---|
 
 ## 맛 데이터 예측
 ### CNN
-| Model | # Params | Range |
+| Model | # Params | R2 score |
 |---|---|---|
 ### ViT
-| Name | Data Type | Range |
+| Model | # Params | R2 score |
 |---|---|---|
 ### CoAtNet
-| Name | Data Type | Range |
+| Model | # Params | R2 score |
 |---|---|---|
 
 # Argument
