@@ -1,5 +1,8 @@
 # Deeplant
 딥러닝을 이용한 육류 이미지 분석.
+육류 이미지를 통한 등급 예측과 맛 데이터 예측을 목표로 함.
+
+
 
 ## Argument
 * parser.add_argument('--run', default ='proto', type=str)  # run 이름 설정
