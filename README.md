@@ -16,7 +16,7 @@
 ![Alt text](image.png)
 
 
-## Installation
+# Installation
 Ensure you have a python environment, `python=3.9` is recommended.
 ```sh
 pip install -r requirement.txt
@@ -26,7 +26,7 @@ pip install -r requirement.txt
 pip install transformers datsets accelerate nvidia-ml-py3
 ```
 
-## Quick Start ⚡
+# Quick Start ⚡
 1. Clone repository
     ```sh
     git clone https://github.com/Deeplant2/Deeplant.git
@@ -36,17 +36,38 @@ pip install transformers datsets accelerate nvidia-ml-py3
     python manage.py --run 'test' --name 'test'
     ```
 
-## 사용 모델
+# 사용 모델
 * ViT
 * CNN
 * CoAtNet
 
-## 사용 데이터 셋
+# 사용 데이터 셋
+| Name | Data Type | Range |
+|---|---|---|
+|image src|string|
+|color|float|1 ~ 5|
+|marbling|float|1 ~ 5|
+|texture|float|1 ~ 5|
+|surface moisture|float|1 ~ 5|
+|total|float|1 ~ 5|
+|grade|string| 1++. 1+, 1, 2, 3|
+
+# 결과 및 성능
+## 등급 예측
 
 
-## 결과 및 성능
+## 맛 데이터 예측
+### CNN
+| Model | # Params | Range |
+|---|---|---|
+### ViT
+| Name | Data Type | Range |
+|---|---|---|
+### CoAtNet
+| Name | Data Type | Range |
+|---|---|---|
 
-## Argument
+# Argument
 * --run (default: 'proto'): Set the run name.
 * --name (default: 'proto'): Set the experiment name.
 * --model_cfgs (default: 'configs/model_cfgs.json'): Set the path to the model-related configuration file.
@@ -55,6 +76,6 @@ pip install transformers datsets accelerate nvidia-ml-py3
 * --lr or --learning_rate (default: 1e-5): Set the learning rate.
 * --data_path (default: '/home/work/deeplant_data'): Set the data path.
 
-## Reference
+# Reference
 
-## License
+# License
