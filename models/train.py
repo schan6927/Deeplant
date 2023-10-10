@@ -10,6 +10,19 @@ import utils.analyze_regression as analyze_r
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def classification(model, params):
+    """
+    모델을 분류를 통해 학습시킨다.
+    
+    모델을 훈련모드로 전환시킨 후, (train_loss, train_metrics)를 classification_epoch()를 통해 구한다.
+    모델을 평가모드로 전환시킨 후, (loss, metric)를 classification_epoch()를 통해 구한다.
+    mlflow 에 train_loss와 val_loss 를 저장하고, (train_loss, train_metrics, val_loss, val_metrics)를 출력한다.
+    위의 동작들을 epoch 만큼 수행한다.
+
+    (
+    model: 사용할 모델
+    ,params: 실험을 진행할 때 주어진 명령들의 집합
+    )
+    """
     num_epochs=params['num_epochs']
     loss_func=nn.CrossEntropyLoss()
     optimizer=params['optimizer']
@@ -48,6 +61,23 @@ def classification(model, params):
 
 # calculate the loss per epochs
 def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, sanity_check=False, opt=None):
+    """
+    데이터 입력값에 대한 모델의 예측값과 실제값의 차이를 저장하고, 역전파를 진행한다.
+
+    loss_func(output, yb)를 통해 예측값인 output과 실제값인 yb 간의 차이를 loss_b에 저장한다. 
+    reguralization 을 거친 후 해당 값을 loss_b 와 더한 후, running_loss에 저장하며, 역전파를 진행한다.
+    최종적으로 구해진 accuracy와 loss를 반환한다.
+    (
+    model: 사용할 모델
+    ,loss_func: 사용할 손실 함수
+    ,dataset_dl: 사용할 데이터셋의 데이터로더
+    ,epoch: 현재 학습 횟수
+    ,eval_function: 
+    ,sanity_check: 결함 여부 나타내는 flag
+    ,opt: 
+    )
+    """
+    
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
 
@@ -97,6 +127,20 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, san
 
 
 def regression(model, params):
+    """
+    모델을 회귀를 통해 학습시킨다.
+    
+    모델을 훈련모드로 전환시킨 후, (train_loss, train_metrics)를 regression_epoch()를 통해 구한다.
+    모델을 평가모드로 전환시킨 후, (loss, metric)를 regression_epoch()를 통해 구한다.
+    mlflow 에 train_loss와 val_loss 를 저장하고, (train_loss, train_metrics, val_loss, val_metrics)를 출력한다.
+    위의 동작들을 epoch 만큼 수행한다.
+
+    (
+    model: 사용할 모델
+    ,params: 실험을 진행할 때 주어진 명령들의 집합
+    )
+    """
+    
     num_epochs=params['num_epochs']
     loss_func=nn.MSELoss()
     optimizer=params['optimizer']
@@ -137,6 +181,23 @@ def regression(model, params):
 
 # calculate the loss per epochs
 def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name, eval_function, opt=None):
+    """
+    데이터 입력값에 대한 모델의 예측값과 실제값의 차이를 저장하고, 역전파를 진행한다.
+
+    loss_func(output, yb)를 통해 예측값인 output과 실제값인 yb 간의 차이를 loss_b에 저장한다. 
+    reguralization 을 거친 후 해당 값을 loss_b 와 더한 후, running_loss에 저장하며, 역전파를 진행한다.
+    최종적으로 구해진 accuracy와 loss를 반환한다.
+    (
+    model: 사용할 모델
+    ,loss_func: 사용할 손실 함수
+    ,dataset_dl: 사용할 데이터셋의 데이터로더
+    ,epoch: 현재 학습 횟수
+    ,eval_function: 
+    ,sanity_check: 결함 여부 나타내는 flag
+    ,opt: 
+    )
+    """
+    
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
     metrics = f.Metrics(eval_function, num_classes, 'regression', len_data, columns_name)
@@ -171,12 +232,31 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
 
 
 def printResults(train_loss, train_metrics, val_loss, val_metrics):
+    """
+
+    (
+    train_loss: 
+    ,train_metrics: 
+    ,val_loss:
+    ,val_metrics:
+    )
+    """
     print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
     for train_metric, val_metric in zip(train_metrics.getMetrics(), val_metrics.getMetrics()):
         print(f'The Training {train_metric.getClassName()} is {train_metric.getResult()} and the Validation {val_metric.getClassName()} is {val_metric.getResult()}')
 
 
 def saveModel(model, epoch, log_epoch, val_loss, best_loss):
+    """
+
+    (
+    model: 
+    ,epoch:
+    ,log_epoch:
+    ,val_loss:
+    ,best_loss: 
+    )
+    """
     if epoch % log_epoch == log_epoch-1:
         mlflow.pytorch.log_model(model, f'model_epoch_{epoch}')
     #saving best model
