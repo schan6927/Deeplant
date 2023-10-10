@@ -10,6 +10,19 @@ import utils.analyze_regression as analyze_r
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 def classification(model, params):
+    """
+    모델을 분류를 통해 학습시킨다.
+    
+    모델을 훈련모드로 전환시킨 후, (train_loss, train_metrics)를 classification_epoch()를 통해 구한다.
+    모델을 평가모드로 전환시킨 후, (loss, metric)를 classification_epoch()를 통해 구한다.
+    mlflow 에 train_loss와 val_loss 를 저장하고, (train_loss, train_metrics, val_loss, val_metrics)를 출력한다.
+    위의 동작들을 epoch 만큼 수행한다.
+
+    (
+    model: 사용할 모델
+    ,params: 실험을 진행할 때 주어진 명령들의 집합
+    )
+    """
     num_epochs=params['num_epochs']
     loss_func=nn.CrossEntropyLoss()
     optimizer=params['optimizer']
@@ -19,19 +32,18 @@ def classification(model, params):
     val_dl=params['val_dl']
     columns_name=params['columns_name']
     eval_function=params['eval_function']
-    save_model=params['save_model']
 
     train_loss, val_loss, train_metric, val_metric =[], [], [], []
     for epoch in tqdm(range(num_epochs)):
 
         #training
         model.train()
-        train_loss, train_metrics= classification_epoch(model, loss_func, train_dl, epoch, eval_function, 1, columns_name, optimizer)
+        train_loss, train_metrics= classification_epoch(model, loss_func, train_dl, epoch, columns_name, optimizer)
 
         #validation
         model.eval()
         with torch.no_grad():
-            val_loss, val_metrics= classification_epoch(model, loss_func, val_dl, epoch, eval_function, 1, columns_name)
+            val_loss, val_metrics= classification_epoch(model, loss_func, val_dl, epoch, columns_name)
         scheduler.step(val_loss[-1])
 
 
@@ -48,13 +60,30 @@ def classification(model, params):
 
 
 # calculate the loss per epochs
-def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, num_classes, columns_name, sanity_check=False, opt=None):
+def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, sanity_check=False, opt=None):
+    """
+    데이터 입력값에 대한 모델의 예측값과 실제값의 차이를 저장하고, 역전파를 진행한다.
+
+    loss_func(output, yb)를 통해 예측값인 output과 실제값인 yb 간의 차이를 loss_b에 저장한다. 
+    reguralization 을 거친 후 해당 값을 loss_b 와 더한 후, running_loss에 저장하며, 역전파를 진행한다.
+    최종적으로 구해진 accuracy와 loss를 반환한다.
+    (
+    model: 사용할 모델
+    ,loss_func: 사용할 손실 함수
+    ,dataset_dl: 사용할 데이터셋의 데이터로더
+    ,epoch: 현재 학습 횟수
+    ,eval_function: 
+    ,sanity_check: 결함 여부 나타내는 flag
+    ,opt: 
+    )
+    """
+    
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
 
     incorrect_output = analyze.IncorrectOutput(columns_name=["1++","1+","1","2","3"])
     confusion_matrix = analyze.ConfusionMatrix()
-    metrics = f.Metrics(eval_function, num_classes, 'regression', len_data, columns_name)
+    accuracy = f.Accuracy(len_data, 1, "classification")
 
     for xb, yb, name_b in tqdm(dataset_dl):
         yb = yb.to(device).long()
@@ -62,7 +91,7 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, num
         output = model(xb)
         loss_b = loss_func(output, yb)
 
-        metrics.update(output, yb)
+        accuracy.update(output, yb)
     
         # L1 regularization =0.001
         lambda1= 0.0000003
@@ -93,10 +122,25 @@ def classification_epoch(model, loss_func, dataset_dl, epoch, eval_function, num
         incorrect_output.saveIncorrectOutput(filename="incorrect_output.csv", epoch=epoch)
 
     loss = running_loss / len_data
-    return loss, metrics
+    metric = accuracy.getResult()
+    return loss, metric
 
 
 def regression(model, params):
+    """
+    모델을 회귀를 통해 학습시킨다.
+    
+    모델을 훈련모드로 전환시킨 후, (train_loss, train_metrics)를 regression_epoch()를 통해 구한다.
+    모델을 평가모드로 전환시킨 후, (loss, metric)를 regression_epoch()를 통해 구한다.
+    mlflow 에 train_loss와 val_loss 를 저장하고, (train_loss, train_metrics, val_loss, val_metrics)를 출력한다.
+    위의 동작들을 epoch 만큼 수행한다.
+
+    (
+    model: 사용할 모델
+    ,params: 실험을 진행할 때 주어진 명령들의 집합
+    )
+    """
+    
     num_epochs=params['num_epochs']
     loss_func=nn.MSELoss()
     optimizer=params['optimizer']
@@ -137,6 +181,23 @@ def regression(model, params):
 
 # calculate the loss per epochs
 def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_name, eval_function, opt=None):
+    """
+    데이터 입력값에 대한 모델의 예측값과 실제값의 차이를 저장하고, 역전파를 진행한다.
+
+    loss_func(output, yb)를 통해 예측값인 output과 실제값인 yb 간의 차이를 loss_b에 저장한다. 
+    reguralization 을 거친 후 해당 값을 loss_b 와 더한 후, running_loss에 저장하며, 역전파를 진행한다.
+    최종적으로 구해진 accuracy와 loss를 반환한다.
+    (
+    model: 사용할 모델
+    ,loss_func: 사용할 손실 함수
+    ,dataset_dl: 사용할 데이터셋의 데이터로더
+    ,epoch: 현재 학습 횟수
+    ,eval_function: 
+    ,sanity_check: 결함 여부 나타내는 flag
+    ,opt: 
+    )
+    """
+    
     running_loss = 0.0
     len_data = len(dataset_dl.sampler)
     metrics = f.Metrics(eval_function, num_classes, 'regression', len_data, columns_name)
@@ -171,12 +232,33 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
 
 
 def printResults(train_loss, train_metrics, val_loss, val_metrics):
+    """
+    train_loss, val_loss 를 출력한다.
+    train_metrics, val_metrics로부터 accuracy score를 받아와 정확도를 출력한다.
+    (
+    train_loss: train_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,train_metrics: train_set의 accuracy 를 담은 실험 관련 정보
+    ,val_loss: val_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,val_metrics: val_set의 accuracy 를 담은 실험 관련 정보
+    )
+    """
     print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
     for train_metric, val_metric in zip(train_metrics.getMetrics(), val_metrics.getMetrics()):
         print(f'The Training {train_metric.getClassName()} is {train_metric.getResult()} and the Validation {val_metric.getClassName()} is {val_metric.getResult()}')
 
 
 def saveModel(model, epoch, log_epoch, val_loss, best_loss):
+    """
+    실험의 epoch 중에서 val_loss 값이 가장 작은 것을 저장한다.
+    
+    (
+    model: 실험이 진행되고 있는 모델
+    ,epoch: 실험에서 설계된 전체 epoch의 수
+    ,log_epoch: 현재 진행되고 있는 epoch의 횟수
+    ,val_loss: val_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,best_loss: 이전의 epoch 까지 저장된 가장 작은 val_loss의 값    
+    )
+    """
     if epoch % log_epoch == log_epoch-1:
         mlflow.pytorch.log_model(model, f'model_epoch_{epoch}')
     #saving best model
