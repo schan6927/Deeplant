@@ -233,12 +233,13 @@ def regression_epoch(model, loss_func, dataset_dl, epoch, num_classes, columns_n
 
 def printResults(train_loss, train_metrics, val_loss, val_metrics):
     """
-
+    train_loss, val_loss 를 출력한다.
+    train_metrics, val_metrics로부터 accuracy score를 받아와 정확도를 출력한다.
     (
-    train_loss: 
-    ,train_metrics: 
-    ,val_loss:
-    ,val_metrics:
+    train_loss: train_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,train_metrics: train_set의 accuracy 를 담은 실험 관련 정보
+    ,val_loss: val_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,val_metrics: val_set의 accuracy 를 담은 실험 관련 정보
     )
     """
     print('The Training Loss is {} and the Validation Loss is {}'.format(train_loss, val_loss))
@@ -248,13 +249,14 @@ def printResults(train_loss, train_metrics, val_loss, val_metrics):
 
 def saveModel(model, epoch, log_epoch, val_loss, best_loss):
     """
-
+    실험의 epoch 중에서 val_loss 값이 가장 작은 것을 저장한다.
+    
     (
-    model: 
-    ,epoch:
-    ,log_epoch:
-    ,val_loss:
-    ,best_loss: 
+    model: 실험이 진행되고 있는 모델
+    ,epoch: 실험에서 설계된 전체 epoch의 수
+    ,log_epoch: 현재 진행되고 있는 epoch의 횟수
+    ,val_loss: val_set에서 loss_function을 통해 저장된 입력값과 실제값의 차이
+    ,best_loss: 이전의 epoch 까지 저장된 가장 작은 val_loss의 값    
     )
     """
     if epoch % log_epoch == log_epoch-1:
