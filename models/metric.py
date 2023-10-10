@@ -8,8 +8,16 @@ import numpy as np
 import mlflow
 
 class Accuracy():
-    def __init__(self, length, num_classes, mode, columns_name):
-        
+    def __init__(self, length, num_classes, mode, columns_name):      
+        """
+        (
+        self
+        ,length: data set의 길이
+        ,num_classes: class의 개수
+        ,mode: classification 혹은 regression
+        ,columns_name: 데이터셋의 column의 이름
+        )
+        """
         self.num_classes = num_classes
         self.length = length
         self.mode = mode
@@ -18,6 +26,9 @@ class Accuracy():
         self.cumulative_metric = np.zeros(num_classes)
 
     def update(self, output, yb):
+        """
+        
+        """
         if self.mode == 'classification':
             _, pred_b = torch.max(output.data,1)
             metric_b = (pred_b == yb).sum().item()
